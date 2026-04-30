@@ -1,0 +1,21 @@
+/* Variáveis de tema e estilos globais */
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #7c3aed;
+  --border: #e5e7eb;
+  --card: #f9fafb;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+* {
+  box-sizing: border-box;
+}
