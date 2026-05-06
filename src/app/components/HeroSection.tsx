@@ -50,11 +50,7 @@ export function HeroSection() {
           </div>
           
           <div className="hidden md:block">
-            <img 
-              src="https://images.unsplash.com/photo-1587614203976-365c74645e83?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMHByb2Zlc3Npb25hbCUyMHdvcmtpbmd8ZW58MXx8fHwxNzcyMDI0Njk1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-              alt="Profissional trabalhando"
-              className="rounded-2xl shadow-2xl w-full h-[500px] object-cover"
-            />
+            
           </div>
         </div>
       </div>
