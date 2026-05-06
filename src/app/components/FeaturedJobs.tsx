@@ -1,5 +1,9 @@
 import { MapPin, Clock, DollarSign, Bookmark } from 'lucide-react';
 
+interface FeaturedJobsProps {
+  onJobClick?: () => void;
+}
+
 const jobs = [
   {
     id: 1,
@@ -75,7 +79,7 @@ const jobs = [
   },
 ];
 
-export function FeaturedJobs() {
+export function FeaturedJobs({ onJobClick }: FeaturedJobsProps) {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -117,7 +121,7 @@ export function FeaturedJobs() {
                     <p className="text-gray-600">{job.company}</p>
                   </div>
                 </div>
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition">
+                <button className="p-2 hover:bg-gray-100 rounded-lg transition" aria-label="Salvar vaga">
                   <Bookmark className="w-5 h-5 text-gray-400" />
                 </button>
               </div>
@@ -150,7 +154,10 @@ export function FeaturedJobs() {
                 ))}
               </div>
               
-              <button className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              <button
+                onClick={onJobClick}
+                className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
                 Candidatar-se
               </button>
             </div>
