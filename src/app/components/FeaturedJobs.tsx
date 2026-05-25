@@ -1,5 +1,5 @@
 import { MapPin, Clock, DollarSign, Bookmark } from 'lucide-react';
-import { jobs } from '../data/jobs';
+import { jobs } from '../bd/jobs';
 
 interface FeaturedJobsProps {
   onJobClick?: (jobId: number) => void;

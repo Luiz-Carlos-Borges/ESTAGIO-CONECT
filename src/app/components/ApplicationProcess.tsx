@@ -4,7 +4,7 @@ import {
   Github, Award, Briefcase, GraduationCap, MapPin
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
-import { jobs } from '../data/jobs';
+import { jobs } from '../bd/jobs';
 
 interface ApplicationProcessProps {
   jobId?: number;

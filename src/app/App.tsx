@@ -11,7 +11,7 @@ import { SignUp } from './components/SignUp';
 import { SignIn } from './components/SignIn';
 import { JobDetails } from './components/JobDetails';
 import { ApplicationProcess } from './components/ApplicationProcess';
-import { jobs } from './data/jobs';
+import { jobs } from './bd/jobs';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('home');
