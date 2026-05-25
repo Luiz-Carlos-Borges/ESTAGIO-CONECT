@@ -3,79 +3,17 @@ import {
   Building2, Users, Calendar, CheckCircle, AlertCircle, Briefcase,
   GraduationCap, Award, TrendingUp
 } from 'lucide-react';
+import { jobs } from '../data/jobs';
 
 interface JobDetailsProps {
+  jobId?: number;
   onBackToHome?: () => void;
+  onApplyNow?: () => void;
 }
 
-export function JobDetails({ onBackToHome }: JobDetailsProps) {
-  // Dados da vaga (em produção viria de uma API ou props)
-  const job = {
-    id: 1,
-    title: 'Estágio em Desenvolvimento Web',
-    company: 'TechCorp Brasil',
-    location: 'São Paulo, SP',
-    type: 'Presencial',
-    salary: 'R$ 1.500 - R$ 2.000',
-    posted: 'Há 2 dias',
-    logo: '💻',
-    tags: ['React', 'JavaScript', 'HTML/CSS'],
-    featured: true,
-    description: 'Estamos procurando um estudante apaixonado por tecnologia para se juntar à nossa equipe de desenvolvimento web. Você terá a oportunidade de trabalhar em projetos reais, aprender com profissionais experientes e contribuir para soluções inovadoras.',
-    responsibilities: [
-      'Desenvolver interfaces web responsivas usando React',
-      'Colaborar com a equipe de design para implementar UI/UX',
-      'Participar de code reviews e reuniões de planejamento',
-      'Aprender e aplicar melhores práticas de desenvolvimento',
-      'Contribuir para a manutenção e evolução de aplicações existentes'
-    ],
-    requirements: [
-      'Estar cursando Ciência da Computação, Sistemas de Informação ou áreas relacionadas',
-      'Conhecimentos básicos em HTML, CSS e JavaScript',
-      'Interesse em aprender React e frameworks modernos',
-      'Boa comunicação e trabalho em equipe',
-      'Disponibilidade para estágio de 6 horas diárias'
-    ],
-    benefits: [
-      'Auxílio transporte',
-      'Vale refeição',
-      'Horário flexível',
-      'Certificado de estágio',
-      'Possibilidade de efetivação',
-      'Treinamentos e workshops',
-      'Ambiente colaborativo'
-    ],
-    companyInfo: {
-      description: 'A TechCorp Brasil é uma empresa de tecnologia focada em soluções web inovadoras. Com mais de 50 colaboradores, trabalhamos com clientes de diversos setores, sempre buscando excelência e inovação.',
-      size: '51-200 funcionários',
-      founded: '2018',
-      website: 'www.techcorp.com.br'
-    },
-    stats: {
-      applicants: 47,
-      deadline: '15 dias restantes',
-      views: 234
-    }
-  };
-
-  const relatedJobs = [
-    {
-      id: 2,
-      title: 'Estágio em Design UI/UX',
-      company: 'Creative Studio',
-      location: 'Rio de Janeiro, RJ',
-      salary: 'R$ 1.200 - R$ 1.800',
-      logo: '🎨'
-    },
-    {
-      id: 3,
-      title: 'Estágio em Marketing Digital',
-      company: 'Marketing Pro',
-      location: 'Belo Horizonte, MG',
-      salary: 'R$ 1.000 - R$ 1.500',
-      logo: '📊'
-    }
-  ];
+export function JobDetails({ jobId, onBackToHome, onApplyNow }: JobDetailsProps) {
+  const job = jobs.find((item) => item.id === jobId) ?? jobs[0];
+  const relatedJobs = jobs.filter((item) => item.id !== job.id).slice(0, 2);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -292,7 +230,10 @@ export function JobDetails({ onBackToHome }: JobDetailsProps) {
                 <p className="text-sm text-gray-600">por mês</p>
               </div>
 
-              <button className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold mb-4">
+              <button
+                onClick={onApplyNow}
+                className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold mb-4"
+              >
                 Candidatar-se Agora
               </button>
 

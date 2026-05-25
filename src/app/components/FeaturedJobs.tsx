@@ -1,83 +1,9 @@
 import { MapPin, Clock, DollarSign, Bookmark } from 'lucide-react';
+import { jobs } from '../data/jobs';
 
 interface FeaturedJobsProps {
-  onJobClick?: () => void;
+  onJobClick?: (jobId: number) => void;
 }
-
-const jobs = [
-  {
-    id: 1,
-    title: 'Estágio em Desenvolvimento Web',
-    company: 'TechCorp Brasil',
-    location: 'São Paulo, SP',
-    type: 'Presencial',
-    salary: 'R$ 1.500 - R$ 2.000',
-    posted: 'Há 2 dias',
-    logo: '💻',
-    tags: ['React', 'JavaScript', 'HTML/CSS'],
-    featured: true,
-  },
-  {
-    id: 2,
-    title: 'Estágio em Design UI/UX',
-    company: 'Creative Studio',
-    location: 'Rio de Janeiro, RJ',
-    type: 'Híbrido',
-    salary: 'R$ 1.200 - R$ 1.800',
-    posted: 'Há 1 dia',
-    logo: '🎨',
-    tags: ['Figma', 'Photoshop', 'UI Design'],
-    featured: true,
-  },
-  {
-    id: 3,
-    title: 'Estágio em Marketing Digital',
-    company: 'Marketing Pro',
-    location: 'Belo Horizonte, MG',
-    type: 'Remoto',
-    salary: 'R$ 1.000 - R$ 1.500',
-    posted: 'Há 3 dias',
-    logo: '📊',
-    tags: ['Redes Sociais', 'Google Ads', 'Conteúdo'],
-    featured: false,
-  },
-  {
-    id: 4,
-    title: 'Estágio em Administração',
-    company: 'Consultoria Empresarial',
-    location: 'Curitiba, PR',
-    type: 'Presencial',
-    salary: 'R$ 1.300 - R$ 1.700',
-    posted: 'Há 4 dias',
-    logo: '📈',
-    tags: ['Excel', 'Gestão', 'Processos'],
-    featured: false,
-  },
-  {
-    id: 5,
-    title: 'Estágio em Recursos Humanos',
-    company: 'RH Soluções',
-    location: 'Porto Alegre, RS',
-    type: 'Híbrido',
-    salary: 'R$ 1.200 - R$ 1.600',
-    posted: 'Há 1 dia',
-    logo: '👥',
-    tags: ['Recrutamento', 'Treinamento', 'People'],
-    featured: true,
-  },
-  {
-    id: 6,
-    title: 'Estágio em Engenharia',
-    company: 'Engenharia Inovadora',
-    location: 'Florianópolis, SC',
-    type: 'Presencial',
-    salary: 'R$ 1.800 - R$ 2.200',
-    posted: 'Há 2 dias',
-    logo: '⚙️',
-    tags: ['AutoCAD', 'Projetos', 'Análise'],
-    featured: false,
-  },
-];
 
 export function FeaturedJobs({ onJobClick }: FeaturedJobsProps) {
   return (
@@ -155,7 +81,7 @@ export function FeaturedJobs({ onJobClick }: FeaturedJobsProps) {
               </div>
               
               <button
-                onClick={onJobClick}
+                onClick={() => onJobClick?.(job.id)}
                 className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
               >
                 Candidatar-se

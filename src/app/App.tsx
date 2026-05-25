@@ -10,9 +10,41 @@ import { Footer } from './components/Footer';
 import { SignUp } from './components/SignUp';
 import { SignIn } from './components/SignIn';
 import { JobDetails } from './components/JobDetails';
+import { ApplicationProcess } from './components/ApplicationProcess';
+import { jobs } from './data/jobs';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'home' | 'signup' | 'signin' | 'jobdetails'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('home');
+  const [selectedJobId, setSelectedJobId] = useState<number>(jobs[0].id);
+
+  const handleSearch = (query: string) => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return;
+    }
+
+    const foundJob = jobs.find((job) =>
+      job.title.toLowerCase().includes(normalizedQuery) ||
+      job.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery))
+    );
+
+    if (foundJob) {
+      setSelectedJobId(foundJob.id);
+      setCurrentPage('jobdetails');
+      return;
+    }
+
+    window.alert(`Nenhum estágio encontrado para: ${query}`);
+  };
+
+  const handleJobClick = (jobId: number) => {
+    setSelectedJobId(jobId);
+    setCurrentPage('jobdetails');
+  };
+
+  const handleApplyNow = () => {
+    setCurrentPage('application');
+  };
 
   if (currentPage === 'signup') {
     return <SignUp onBackToHome={() => setCurrentPage('home')} />;
@@ -23,15 +55,30 @@ export default function App() {
   }
 
   if (currentPage === 'jobdetails') {
-    return <JobDetails onBackToHome={() => setCurrentPage('home')} />;
+    return (
+      <JobDetails
+        jobId={selectedJobId}
+        onBackToHome={() => setCurrentPage('home')}
+        onApplyNow={handleApplyNow}
+      />
+    );
+  }
+
+  if (currentPage === 'application') {
+    return (
+      <ApplicationProcess
+        jobId={selectedJobId}
+        onBackToJob={() => setCurrentPage('jobdetails')}
+      />
+    );
   }
 
   return (
     <div className="min-h-screen bg-white">
       <Header onSignUp={() => setCurrentPage('signup')} onSignIn={() => setCurrentPage('signin')} />
-      <HeroSection />
+      <HeroSection onSearch={handleSearch} />
       <Categories />
-      <FeaturedJobs onJobClick={() => setCurrentPage('jobdetails')} />
+      <FeaturedJobs onJobClick={handleJobClick} />
       <HowItWorks />
       <Testimonials />
       <Newsletter />
