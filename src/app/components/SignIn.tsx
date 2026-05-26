@@ -1,5 +1,6 @@
 import { Search, Mail, Lock, ArrowRight, CheckCircle, Briefcase, TrendingUp } from 'lucide-react';
 
+// SignIn.tsx: página de login com layout responsivo e opções de acesso social
 interface SignInProps {
   onBackToHome?: () => void;
 }

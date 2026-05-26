@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Search } from 'lucide-react';
 
+// HeroSection.tsx: seção inicial do site com título, descrição e busca de vagas
 interface HeroSectionProps {
   onSearch: (query: string) => void;
 }
@@ -8,6 +9,7 @@ interface HeroSectionProps {
 export function HeroSection({ onSearch }: HeroSectionProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Envia o termo de busca para o App ao submeter o formulário
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSearch(searchTerm);

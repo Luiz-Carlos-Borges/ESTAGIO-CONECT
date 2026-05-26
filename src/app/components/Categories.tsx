@@ -1,5 +1,6 @@
 import { Code, Palette, TrendingUp, ShoppingBag, Heart, Wrench, GraduationCap, DollarSign } from 'lucide-react';
 
+// Categories.tsx: cards de categorias populares com ícones e contagem de vagas
 const categories = [
   { icon: Code, name: 'Tecnologia', count: '345 estágios', color: 'bg-blue-100 text-blue-600' },
   { icon: Palette, name: 'Design', count: '156 estágios', color: 'bg-purple-100 text-purple-600' },

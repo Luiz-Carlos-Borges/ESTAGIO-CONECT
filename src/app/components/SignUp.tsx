@@ -1,6 +1,7 @@
 import { Search, Mail, Lock, User, GraduationCap, Calendar, Phone, MapPin, ArrowRight, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 
+// SignUp.tsx: fluxo de cadastro em duas etapas para criação de conta e informações acadêmicas
 interface SignUpProps {
   onBackToHome?: () => void;
 }

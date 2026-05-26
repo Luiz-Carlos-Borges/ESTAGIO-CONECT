@@ -11,8 +11,10 @@ interface JobDetailsProps {
   onApplyNow?: () => void;
 }
 
+// JobDetails.tsx: exibe os detalhes completos de uma vaga selecionada
 export function JobDetails({ jobId, onBackToHome, onApplyNow }: JobDetailsProps) {
   const job = jobs.find((item) => item.id === jobId) ?? jobs[0];
+  // Seleciona vagas relacionadas para exibir no painel lateral
   const relatedJobs = jobs.filter((item) => item.id !== job.id).slice(0, 2);
 
   return (

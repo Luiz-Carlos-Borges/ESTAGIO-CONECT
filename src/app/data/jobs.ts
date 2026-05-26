@@ -1,3 +1,4 @@
+// jobs.ts: definição de tipo e dados simulados de vagas para o aplicativo
 export interface Job {
   id: number;
   title: string;

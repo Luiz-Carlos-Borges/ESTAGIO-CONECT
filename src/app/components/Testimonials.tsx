@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react';
 
+// Testimonials.tsx: seções de depoimentos de estudantes que usaram a plataforma
 export function Testimonials() {
   const testimonials = [
     {

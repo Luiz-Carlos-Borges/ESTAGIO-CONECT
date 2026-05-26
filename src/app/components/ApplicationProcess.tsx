@@ -11,6 +11,7 @@ interface ApplicationProcessProps {
   onBackToJob?: () => void;
 }
 
+// ApplicationProcess.tsx: página de candidatura e visualização das etapas do processo seletivo
 export function ApplicationProcess({ jobId, onBackToJob }: ApplicationProcessProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -29,7 +30,7 @@ export function ApplicationProcess({ jobId, onBackToJob }: ApplicationProcessPro
     salary: 'R$ 1.500 - R$ 2.000'
   }; 
 
-  // Etapas do processo seletivo
+  // Etapas do processo seletivo exibidas no sidebar e na timeline
   const processSteps = [
     {
       id: 1,
@@ -87,6 +88,7 @@ export function ApplicationProcess({ jobId, onBackToJob }: ApplicationProcessPro
     }
   ];
 
+  // Submete o formulário de candidatura e confirma o envio ao usuário
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     alert('Candidatura enviada com sucesso! Você receberá atualizações por email.');

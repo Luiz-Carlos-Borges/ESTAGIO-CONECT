@@ -1,5 +1,6 @@
 import { Search, Menu, User } from 'lucide-react';
 
+// Header.tsx: cabeçalho fixo com botões de login/cadastro e navegação principal
 interface HeaderProps {
   onSignUp?: () => void;
   onSignIn?: () => void;

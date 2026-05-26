@@ -1,6 +1,7 @@
 import { MapPin, Clock, DollarSign, Bookmark } from 'lucide-react';
 import { jobs } from '../data/jobs';
 
+// FeaturedJobs.tsx: lista de vagas em destaque que pode acionar o detalhe da vaga
 interface FeaturedJobsProps {
   onJobClick?: (jobId: number) => void;
 }

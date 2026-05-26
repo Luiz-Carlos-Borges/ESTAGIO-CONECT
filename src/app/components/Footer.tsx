@@ -1,5 +1,6 @@
 import { Search, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
 
+// Footer.tsx: rodapé com links de navegação e redes sociais
 export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
