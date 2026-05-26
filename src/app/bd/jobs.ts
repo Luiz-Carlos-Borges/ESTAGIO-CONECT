@@ -1,5 +1,8 @@
-// jobs.ts: definição de tipo e dados simulados de vagas para o aplicativo
 export interface Job {
+
+  
+
+  
   id: number;
   title: string;
   company: string;
@@ -30,7 +33,7 @@ export interface Job {
 export const jobs: Job[] = [
   {
     id: 1,
-    title: 'Estágio em Desenvolvimento Web',
+    title: 'Desenvolvimento Web',
     company: 'TechCorp Brasil',
     location: 'São Paulo, SP',
     type: 'Presencial',
@@ -73,7 +76,7 @@ export const jobs: Job[] = [
   },
   {
     id: 2,
-    title: 'Estágio em Design UI/UX',
+    title: 'Design UI/UX',
     company: 'Creative Studio',
     location: 'Rio de Janeiro, RJ',
     type: 'Híbrido',
@@ -116,7 +119,7 @@ export const jobs: Job[] = [
   },
   {
     id: 3,
-    title: 'Estágio em Marketing Digital',
+    title: 'Marketing Digital',
     company: 'Marketing Pro',
     location: 'Belo Horizonte, MG',
     type: 'Remoto',
@@ -159,7 +162,7 @@ export const jobs: Job[] = [
   },
   {
     id: 4,
-    title: 'Estágio em Administração',
+    title: 'Administração',
     company: 'Consultoria Empresarial',
     location: 'Curitiba, PR',
     type: 'Presencial',
@@ -202,7 +205,7 @@ export const jobs: Job[] = [
   },
   {
     id: 5,
-    title: 'Estágio em Recursos Humanos',
+    title: 'Recursos Humanos',
     company: 'RH Soluções',
     location: 'Porto Alegre, RS',
     type: 'Híbrido',
@@ -245,7 +248,7 @@ export const jobs: Job[] = [
   },
   {
     id: 6,
-    title: 'Estágio em Engenharia',
+    title: 'Engenharia',
     company: 'Engenharia Inovadora',
     location: 'Florianópolis, SC',
     type: 'Presencial',

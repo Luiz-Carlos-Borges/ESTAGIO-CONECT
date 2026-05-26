@@ -3,7 +3,7 @@ import {
   Building2, Users, Calendar, CheckCircle, AlertCircle, Briefcase,
   GraduationCap, Award, TrendingUp
 } from 'lucide-react';
-import { jobs } from '../data/jobs';
+import { jobs } from '../bd/jobs';
 
 interface JobDetailsProps {
   jobId?: number;
