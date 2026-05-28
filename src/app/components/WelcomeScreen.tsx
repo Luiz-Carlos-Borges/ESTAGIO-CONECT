@@ -1,5 +1,6 @@
 import { Search, Users, Briefcase, ArrowRight, CheckCircle, Building2, GraduationCap, TrendingUp, Award } from 'lucide-react';
 
+// WelcomeScreen.tsx: página de boas-vindas que permite escolher entre estudante ou empresa
 interface WelcomeScreenProps {
   onStartAsStudent: () => void;
   onStartAsCompany: () => void;

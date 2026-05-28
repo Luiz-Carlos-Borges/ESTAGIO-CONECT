@@ -1,5 +1,6 @@
 import { Mail } from 'lucide-react';
 
+// Newsletter.tsx: seção de inscrição por email para receber novidades sobre vagas
 export function Newsletter() {
   return (
     <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">

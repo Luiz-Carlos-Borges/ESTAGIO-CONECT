@@ -1,3 +1,5 @@
+// jobs.ts: banco de dados local de vagas de estágio usado no aplicativo
+// Contém a interface Job e uma lista de vagas com informações completas
 export interface Job {
 
   

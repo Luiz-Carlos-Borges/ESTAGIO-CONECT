@@ -1,5 +1,6 @@
 import { UserPlus, Search, FileText, CheckCircle } from 'lucide-react';
 
+// HowItWorks.tsx: seção explicando o fluxo do usuário em 4 passos para conseguir um estágio
 export function HowItWorks() {
   const steps = [
     {

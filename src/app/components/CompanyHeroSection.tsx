@@ -1,5 +1,6 @@
 import { Search, Briefcase, Building2, Users, ShieldCheck, ArrowRight } from 'lucide-react';
 
+// CompanyHeroSection.tsx: seção voltada para empresas que desejam publicar vagas e contratar estagiários
 interface CompanyHeroSectionProps {
   onBackToWelcome: () => void;
   onStartCreateJob: () => void;
