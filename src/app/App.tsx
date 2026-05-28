@@ -2,6 +2,9 @@
 // Gerencia a navegação de páginas internas e o estado de seleção de vagas.
 import { useState } from 'react';
 import { Header } from './components/Header';
+import { WelcomeScreen } from './components/WelcomeScreen';
+import { CompanyHeroSection } from './components/CompanyHeroSection';
+import { CreateJob } from './components/CreateJob';
 import { HeroSection } from './components/HeroSection';
 import { Categories } from './components/Categories';
 import { FeaturedJobs } from './components/FeaturedJobs';
@@ -17,7 +20,7 @@ import { jobs } from './bd/jobs';
 
 export default function App() {
   // Estado de navegação do app: controla qual tela está visível
-  const [currentPage, setCurrentPage] = useState<'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('home');
+  const [currentPage, setCurrentPage] = useState<'welcome' | 'company' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('welcome');
   // Armazena a vaga selecionada para detalhe/candidatura
   const [selectedJobId, setSelectedJobId] = useState<number>(jobs[0].id);
 
@@ -127,6 +130,28 @@ export default function App() {
 
   if (currentPage === 'signin') {
     return <SignIn onBackToHome={() => setCurrentPage('home')} />;
+  }
+
+  if (currentPage === 'welcome') {
+    return (
+      <WelcomeScreen
+        onStartAsStudent={() => setCurrentPage('home')}
+        onStartAsCompany={() => setCurrentPage('company')}
+      />
+    );
+  }
+
+  if (currentPage === 'company') {
+    return (
+      <CompanyHeroSection
+        onBackToWelcome={() => setCurrentPage('welcome')}
+        onStartCreateJob={() => setCurrentPage('createjob')}
+      />
+    );
+  }
+
+  if (currentPage === 'createjob') {
+    return <CreateJob onBackToCompany={() => setCurrentPage('company')} />;
   }
 
   if (currentPage === 'jobdetails') {

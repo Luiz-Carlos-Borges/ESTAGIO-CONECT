@@ -1,4 +1,4 @@
-import { Search, Mail, Lock, ArrowRight, CheckCircle, Briefcase, TrendingUp, BuildingLibrary } from 'lucide-react';
+import { Search, Mail, Lock, ArrowRight, CheckCircle, Briefcase, TrendingUp, Building2 } from 'lucide-react';
 import { useState } from 'react';
 
 // SignIn.tsx: página de login com layout responsivo e opções de acesso social
