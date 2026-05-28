@@ -1,4 +1,4 @@
-import { Search, Mail, Lock, User, GraduationCap, Calendar, Phone, MapPin, ArrowRight, CheckCircle } from 'lucide-react';
+import { Search, Mail, Lock, User, GraduationCap, Calendar, Phone, MapPin, ArrowRight, CheckCircle, Building } from 'lucide-react';
 import { useState } from 'react';
 
 // SignUp.tsx: fluxo de cadastro em duas etapas para criação de conta e informações acadêmicas
@@ -8,6 +8,7 @@ interface SignUpProps {
 
 export function SignUp({ onBackToHome }: SignUpProps) {
   const [step, setStep] = useState(1);
+  const [role, setRole] = useState<'candidate' | 'company'>('candidate');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -81,6 +82,22 @@ export function SignUp({ onBackToHome }: SignUpProps) {
 
             {/* Lado Direito - Formulário */}
             <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
+              {/* Role selector */}
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <button
+                  onClick={() => { setRole('candidate'); setStep(1); }}
+                  className={`px-4 py-2 rounded-full font-semibold transition ${role === 'candidate' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                >
+                  Candidato
+                </button>
+                <button
+                  onClick={() => { setRole('company'); setStep(1); }}
+                  className={`px-4 py-2 rounded-full font-semibold transition ${role === 'company' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                >
+                  Empresa
+                </button>
+              </div>
+
               {/* Progress Steps */}
               <div className="flex items-center justify-center gap-2 mb-8">
                 {[1, 2].map((num) => (
@@ -101,14 +118,15 @@ export function SignUp({ onBackToHome }: SignUpProps) {
 
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                  {step === 1 ? 'Crie sua conta' : 'Informações acadêmicas'}
+                  {role === 'candidate' ? (step === 1 ? 'Crie sua conta' : 'Informações acadêmicas') : 'Crie a conta da sua empresa'}
                 </h2>
                 <p className="text-gray-600">
-                  {step === 1 ? 'Preencha seus dados pessoais' : 'Complete seu perfil de estudante'}
+                  {role === 'candidate' ? (step === 1 ? 'Preencha seus dados pessoais' : 'Complete seu perfil de estudante') : 'Cadastre sua empresa para publicar vagas'}
                 </p>
               </div>
 
-              {step === 1 ? (
+              {role === 'candidate' ? (
+                step === 1 ? (
                 <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -193,7 +211,7 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     <ArrowRight className="w-5 h-5" />
                   </button>
                 </form>
-              ) : (
+                ) : (
                 <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Cadastro concluído!'); }}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -211,12 +229,12 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="course" className="block text-sm font-medium text-gray-700 mb-2">
                       Curso
                     </label>
                     <div className="relative">
                       <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
+                      <select id="course" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
                         <option value="">Selecione seu curso</option>
                         <option>Ciência da Computação</option>
                         <option>Engenharia</option>
@@ -231,12 +249,12 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="period" className="block text-sm font-medium text-gray-700 mb-2">
                       Período/Semestre
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
+                      <select id="period" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
                         <option value="">Selecione o período</option>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                           <option key={num}>{num}º Período</option>
@@ -246,12 +264,12 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="graduationYear" className="block text-sm font-medium text-gray-700 mb-2">
                       Previsão de formatura
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
+                      <select id="graduationYear" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
                         <option value="">Ano de formatura</option>
                         <option>2025</option>
                         <option>2026</option>
@@ -305,6 +323,65 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                       Criar conta
                     </button>
                   </div>
+                </form>
+                )
+              ) : (
+                // Company signup form (single step)
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Cadastro da empresa concluído!'); }}>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome da empresa</label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input type="text" placeholder="Nome da empresa" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input type="email" placeholder="contato@empresa.com" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input type="tel" placeholder="(11) 99999-9999" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Site (opcional)</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input type="url" placeholder="https://" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input type="password" placeholder="Mínimo 8 caracteres" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar senha</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input type="password" placeholder="Digite a senha novamente" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 pt-2">
+                    <input type="checkbox" id="terms_company" className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-600" required />
+                    <label htmlFor="terms_company" className="text-sm text-gray-600">Concordo com os <a href="#" className="text-blue-600 hover:underline">Termos de Uso</a> e a <a href="#" className="text-blue-600 hover:underline">Política de Privacidade</a></label>
+                  </div>
+
+                  <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">Criar conta da empresa</button>
                 </form>
               )}
 

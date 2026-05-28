@@ -1,4 +1,5 @@
-import { Search, Mail, Lock, ArrowRight, CheckCircle, Briefcase, TrendingUp } from 'lucide-react';
+import { Search, Mail, Lock, ArrowRight, CheckCircle, Briefcase, TrendingUp, BuildingLibrary } from 'lucide-react';
+import { useState } from 'react';
 
 // SignIn.tsx: página de login com layout responsivo e opções de acesso social
 interface SignInProps {
@@ -6,6 +7,7 @@ interface SignInProps {
 }
 
 export function SignIn({ onBackToHome }: SignInProps) {
+  const [role, setRole] = useState<'candidate' | 'company'>('candidate');
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header Simplificado */}
@@ -126,17 +128,27 @@ export function SignIn({ onBackToHome }: SignInProps) {
                   <Lock className="w-8 h-8 text-blue-600" />
                 </div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                  Entrar na sua conta
+                  {role === 'candidate' ? 'Entrar na sua conta' : 'Acessar painel da empresa'}
                 </h2>
                 <p className="text-gray-600">
-                  Acesse seu painel e encontre o estágio perfeito
+                  {role === 'candidate' ? 'Acesse seu painel e encontre o estágio perfeito' : 'Acesse o painel para publicar e gerenciar vagas'}
                 </p>
+              </div>
+
+              {/* Role selector */}
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <button onClick={() => setRole('candidate')} className={`px-4 py-2 rounded-full font-semibold transition ${role === 'candidate' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                  Candidato
+                </button>
+                <button onClick={() => setRole('company')} className={`px-4 py-2 rounded-full font-semibold transition ${role === 'company' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
+                  Empresa
+                </button>
               </div>
 
               <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); onBackToHome?.(); }}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    {role === 'candidate' ? 'Email' : 'Email da empresa'}
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -180,10 +192,7 @@ export function SignIn({ onBackToHome }: SignInProps) {
                   </a>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2"
-                >
+                <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2">
                   Entrar
                   <ArrowRight className="w-5 h-5" />
                 </button>
