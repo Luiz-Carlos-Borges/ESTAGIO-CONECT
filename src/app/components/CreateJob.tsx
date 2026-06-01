@@ -19,9 +19,12 @@ import {
   Eye,
 } from 'lucide-react';
 import { FormEvent, KeyboardEvent, useState } from 'react';
+import type { Job } from '../types';
 
 interface CreateJobProps {
   onBackToCompany: () => void;
+  token?: string;
+  onCreated?: (job: Job) => void;
 }
 
 const areas = ['Tecnologia', 'Marketing', 'Design', 'Administração', 'Finanças', 'Recursos Humanos'];
@@ -29,7 +32,7 @@ const jobTypes = ['Presencial', 'Remoto', 'Híbrido'];
 const sectors = ['Tecnologia', 'Educação', 'Saúde', 'Finanças', 'Serviços', 'Logística'];
 const companySizes = ['1-10', '11-50', '51-200', '201-500', '500+'];
 
-export function CreateJob({ onBackToCompany }: CreateJobProps) {
+export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps) {
   const [title, setTitle] = useState('');
   const [area, setArea] = useState(areas[0]);
   const [jobType, setJobType] = useState(jobTypes[0]);
@@ -49,6 +52,8 @@ export function CreateJob({ onBackToCompany }: CreateJobProps) {
   const [companyAbout, setCompanyAbout] = useState('');
   const [companySector, setCompanySector] = useState(sectors[0]);
   const [companySize, setCompanySize] = useState(companySizes[0]);
+  const [companySite, setCompanySite] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const updateItem = (items: string[], setItems: (value: string[]) => void, index: number, value: string) => {
     const updated = [...items];
@@ -84,9 +89,63 @@ export function CreateJob({ onBackToCompany }: CreateJobProps) {
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    window.alert('Vaga salva com sucesso! (Simulação)');
+
+    if (!token) {
+      window.alert('Você precisa estar logado como empresa para publicar uma vaga.');
+      return;
+    }
+
+    if (!title || !city || !state || !description || tags.length === 0) {
+      window.alert('Preencha todos os campos obrigatórios da vaga.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        title,
+        location: `${city}, ${state}`,
+        type: jobType,
+        salary: `${salaryMin || 'A combinar'} - ${salaryMax || 'A combinar'}`,
+        posted: deadline ? `Prazo até ${deadline}` : 'Há pouco tempo',
+        logo: '💼',
+        tags,
+        description,
+        responsibilities,
+        requirements,
+        benefits,
+        companyAbout,
+        companySize,
+        companyFounded: '2024',
+        companyWebsite: companySite,
+        deadline: deadline || 'A definir',
+      };
+
+      const response = await fetch('/api/jobs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        window.alert(data.error || 'Erro ao publicar a vaga.');
+        return;
+      }
+
+      onCreated?.(data);
+      window.alert('Vaga publicada com sucesso.');
+    } catch (error) {
+      window.alert('Erro ao conectar com o servidor.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -493,6 +552,16 @@ export function CreateJob({ onBackToCompany }: CreateJobProps) {
                       <option key={item} value={item}>{item} colaboradores</option>
                     ))}
                   </select>
+                </label>
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-gray-700">Site da empresa</span>
+                  <input
+                    type="url"
+                    value={companySite}
+                    onChange={(event) => setCompanySite(event.target.value)}
+                    placeholder="https://empresa.com"
+                    className="w-full rounded-3xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                  />
                 </label>
               </div>
             </section>

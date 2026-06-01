@@ -1,12 +1,13 @@
 import { MapPin, Clock, DollarSign, Bookmark } from 'lucide-react';
-import { jobs } from '../bd/jobs';
+import { Job } from '../types';
 
 // FeaturedJobs.tsx: lista de vagas em destaque que pode acionar o detalhe da vaga
 interface FeaturedJobsProps {
+  jobs: Job[];
   onJobClick?: (jobId: number) => void;
 }
 
-export function FeaturedJobs({ onJobClick }: FeaturedJobsProps) {
+export function FeaturedJobs({ jobs, onJobClick }: FeaturedJobsProps) {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">

@@ -1,14 +1,89 @@
 import { Search, Mail, Lock, User, GraduationCap, Calendar, Phone, MapPin, ArrowRight, CheckCircle, Building } from 'lucide-react';
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 
 // SignUp.tsx: fluxo de cadastro em duas etapas para criação de conta e informações acadêmicas
 interface SignUpProps {
   onBackToHome?: () => void;
+  onAuthSuccess?: (token: string, user: any) => void;
 }
 
-export function SignUp({ onBackToHome }: SignUpProps) {
+export function SignUp({ onBackToHome, onAuthSuccess }: SignUpProps) {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<'candidate' | 'company'>('candidate');
+  const [loading, setLoading] = useState(false);
+
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [school, setSchool] = useState('');
+  const [course, setCourse] = useState('');
+  const [period, setPeriod] = useState('');
+  const [graduationYear, setGraduationYear] = useState('');
+  const [city, setCity] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [companySite, setCompanySite] = useState('');
+  const [companyAbout, setCompanyAbout] = useState('');
+
+  const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (password !== confirmPassword) {
+      window.alert('As senhas não coincidem.');
+      return;
+    }
+
+    if (!name || !email || !password) {
+      window.alert('Preencha nome, email e senha.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+          companyName: role === 'company' ? companyName : null,
+          companyAbout: role === 'company' ? companyAbout : null,
+          website: role === 'company' ? companySite : null,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        window.alert(data.error || 'Erro ao cadastrar usuário.');
+        return;
+      }
+
+      onAuthSuccess?.(data.token, data.user);
+    } catch (error) {
+      window.alert('Erro ao conectar com o servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContinue = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!name || !email || !password || !confirmPassword) {
+      window.alert('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      window.alert('As senhas não coincidem.');
+      return;
+    }
+    setStep(2);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -127,7 +202,7 @@ export function SignUp({ onBackToHome }: SignUpProps) {
 
               {role === 'candidate' ? (
                 step === 1 ? (
-                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
+                <form className="space-y-4" onSubmit={handleContinue}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Nome completo
@@ -136,6 +211,8 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
                         placeholder="João da Silva"
                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         required
@@ -151,6 +228,8 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
                         placeholder="seu@email.com"
                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         required
@@ -166,6 +245,8 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="tel"
+                        value={phone}
+                        onChange={(event) => setPhone(event.target.value)}
                         placeholder="(11) 99999-9999"
                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         required
@@ -181,6 +262,8 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
                         placeholder="Mínimo 8 caracteres"
                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         required
@@ -196,6 +279,8 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="password"
+                        value={confirmPassword}
+                        onChange={(event) => setConfirmPassword(event.target.value)}
                         placeholder="Digite a senha novamente"
                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         required
@@ -205,14 +290,15 @@ export function SignUp({ onBackToHome }: SignUpProps) {
 
                   <button
                     type="submit"
-                    className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2"
+                    disabled={loading}
+                    className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     Continuar
                     <ArrowRight className="w-5 h-5" />
                   </button>
                 </form>
                 ) : (
-                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Cadastro concluído!'); }}>
+                <form className="space-y-4" onSubmit={handleRegister}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Instituição de ensino
@@ -221,6 +307,8 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                       <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
+                        value={school}
+                        onChange={(event) => setSchool(event.target.value)}
                         placeholder="Nome da universidade"
                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         required
@@ -234,7 +322,12 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     </label>
                     <div className="relative">
                       <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select id="course" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
+                      <select
+                        id="course"
+                        value={course}
+                        onChange={(event) => setCourse(event.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white"
+                      >
                         <option value="">Selecione seu curso</option>
                         <option>Ciência da Computação</option>
                         <option>Engenharia</option>
@@ -254,9 +347,14 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select id="period" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
+                      <select
+                        id="period"
+                        value={period}
+                        onChange={(event) => setPeriod(event.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white"
+                      >
                         <option value="">Selecione o período</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                           <option key={num}>{num}º Período</option>
                         ))}
                       </select>
@@ -269,7 +367,12 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <select id="graduationYear" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white">
+                      <select
+                        id="graduationYear"
+                        value={graduationYear}
+                        onChange={(event) => setGraduationYear(event.target.value)}
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition appearance-none bg-white"
+                      >
                         <option value="">Ano de formatura</option>
                         <option>2025</option>
                         <option>2026</option>
@@ -289,6 +392,8 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
+                        value={city}
+                        onChange={(event) => setCity(event.target.value)}
                         placeholder="Sua cidade"
                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         required
@@ -318,7 +423,8 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+                      disabled={loading}
+                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50"
                     >
                       Criar conta
                     </button>
@@ -327,12 +433,19 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                 )
               ) : (
                 // Company signup form (single step)
-                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Cadastro da empresa concluído!'); }}>
+                <form className="space-y-4" onSubmit={handleRegister}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nome da empresa</label>
                     <div className="relative">
                       <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input type="text" placeholder="Nome da empresa" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                      <input
+                        type="text"
+                        value={companyName}
+                        onChange={(event) => setCompanyName(event.target.value)}
+                        placeholder="Nome da empresa"
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
+                        required
+                      />
                     </div>
                   </div>
 
@@ -340,7 +453,14 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input type="email" placeholder="contato@empresa.com" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="contato@empresa.com"
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
+                        required
+                      />
                     </div>
                   </div>
 
@@ -348,7 +468,14 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input type="tel" placeholder="(11) 99999-9999" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(event) => setPhone(event.target.value)}
+                        placeholder="(11) 99999-9999"
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
+                        required
+                      />
                     </div>
                   </div>
 
@@ -356,7 +483,13 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Site (opcional)</label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input type="url" placeholder="https://" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" />
+                      <input
+                        type="url"
+                        value={companySite}
+                        onChange={(event) => setCompanySite(event.target.value)}
+                        placeholder="https://"
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
+                      />
                     </div>
                   </div>
 
@@ -364,7 +497,14 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input type="password" placeholder="Mínimo 8 caracteres" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder="Mínimo 8 caracteres"
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
+                        required
+                      />
                     </div>
                   </div>
 
@@ -372,7 +512,14 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Confirmar senha</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input type="password" placeholder="Digite a senha novamente" className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition" required />
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(event) => setConfirmPassword(event.target.value)}
+                        placeholder="Digite a senha novamente"
+                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
+                        required
+                      />
                     </div>
                   </div>
 
@@ -381,7 +528,7 @@ export function SignUp({ onBackToHome }: SignUpProps) {
                     <label htmlFor="terms_company" className="text-sm text-gray-600">Concordo com os <a href="#" className="text-blue-600 hover:underline">Termos de Uso</a> e a <a href="#" className="text-blue-600 hover:underline">Política de Privacidade</a></label>
                   </div>
 
-                  <button type="submit" className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">Criar conta da empresa</button>
+                  <button type="submit" disabled={loading} className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50">Criar conta da empresa</button>
                 </form>
               )}
 

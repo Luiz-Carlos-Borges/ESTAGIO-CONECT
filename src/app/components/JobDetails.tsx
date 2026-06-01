@@ -1,20 +1,38 @@
 import {
   Search, ArrowLeft, MapPin, Clock, DollarSign, Bookmark, Share2,
-  Building2, Users, Calendar, CheckCircle, AlertCircle, Briefcase,
+  Building2, Users, Calendar, CheckCircle, Briefcase,
   GraduationCap, Award, TrendingUp
 } from 'lucide-react';
-import { jobs } from '../bd/jobs';
+import { Job } from '../types';
 
 interface JobDetailsProps {
-  jobId?: number;
+  job?: Job | null;
+  jobs: Job[];
   onBackToHome?: () => void;
   onApplyNow?: () => void;
 }
 
 // JobDetails.tsx: exibe os detalhes completos de uma vaga selecionada
-export function JobDetails({ jobId, onBackToHome, onApplyNow }: JobDetailsProps) {
-  const job = jobs.find((item) => item.id === jobId) ?? jobs[0];
-  // Seleciona vagas relacionadas para exibir no painel lateral
+export function JobDetails({ job: jobProp, jobs, onBackToHome, onApplyNow }: JobDetailsProps) {
+  const job: Job = jobProp ?? {
+    id: 0,
+    title: 'Carregando vaga...',
+    company: 'EstágioConnect',
+    location: '---',
+    type: '---',
+    salary: '---',
+    posted: '---',
+    logo: '💼',
+    tags: [],
+    featured: false,
+    description: 'Selecione uma vaga para ver os detalhes.',
+    responsibilities: [],
+    requirements: [],
+    benefits: [],
+    companyInfo: { description: '', size: '', founded: '', website: '' },
+    stats: { applicants: 0, deadline: '---', views: 0 },
+  };
+
   const relatedJobs = jobs.filter((item) => item.id !== job.id).slice(0, 2);
 
   return (

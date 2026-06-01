@@ -1,6 +1,6 @@
 // App.tsx: componente raiz do aplicativo
 // Gerencia a navegação de páginas internas e o estado de seleção de vagas.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { CompanyHeroSection } from './components/CompanyHeroSection';
@@ -16,16 +16,18 @@ import { SignUp } from './components/SignUp';
 import { SignIn } from './components/SignIn';
 import { JobDetails } from './components/JobDetails';
 import { ApplicationProcess } from './components/ApplicationProcess';
-import { jobs } from './bd/jobs';
+import { Job, AuthState } from './types';
 
 export default function App() {
-  // Estado de navegação do app: controla qual tela está visível
+  // Estado de navegação das páginas internas do aplicativo.
   const [currentPage, setCurrentPage] = useState<'welcome' | 'company' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('welcome');
-  // Armazena a vaga selecionada para detalhe/candidatura
-  const [selectedJobId, setSelectedJobId] = useState<number>(jobs[0].id);
+  // Lista de vagas carregadas pelo backend.
+  const [jobs, setJobs] = useState<Job[]>([]);
+  // Vaga atualmente selecionada para visualizar detalhes ou aplicar.
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  // Estado de autenticação do usuário logado.
+  const [auth, setAuth] = useState<AuthState | null>(null);
 
-  // Funções de normalização e extração de busca para deixar a pesquisa mais inteligente
-  // Comentário aplicado às modificações recentes e aos próximos ajustes.
   const normalizeText = (text: string) =>
     text
       .normalize('NFD')
@@ -34,7 +36,6 @@ export default function App() {
       .trim()
       .toLowerCase();
 
-  // Prefixos genéricos que não devem retornar um resultado sozinho
   const genericSearchPrefixes = [
     'estagio em',
     'estágio em',
@@ -46,7 +47,6 @@ export default function App() {
     'vaga em',
   ];
 
-  // Remove prefixos como "estágio em" para que a pesquisa foque no conteúdo real
   const stripGenericPrefix = (query: string) => {
     for (const prefix of genericSearchPrefixes) {
       if (query === prefix) {
@@ -60,76 +60,133 @@ export default function App() {
     return query;
   };
 
-  // Detecta se a consulta é apenas o prefixo genérico sem um termo adicional válido
   const isOnlyGenericPrefixQuery = (query: string) =>
     genericSearchPrefixes.some(
       (prefix) => query === prefix || query === `${prefix} ` || query.startsWith(prefix + ' '),
     );
 
-  // Busca de vagas: aceita termos, tags e IDs, mas evita abrir vaga se o usuário digitar apenas o prefixo.
-  const handleSearch = (query: string) => {
+  // Carrega as vagas iniciais e mantém o usuário logado se o token estiver presente.
+  useEffect(() => {
+    loadJobs();
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('/api/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error('Token inválido');
+          return response.json();
+        })
+        .then((data) => {
+          setAuth({ token, user: data.user });
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+          setAuth(null);
+        });
+    }
+  }, []);
+
+  // Faz requisição ao backend para buscar as vagas, com pesquisa opcional.
+  const loadJobs = async (searchQuery?: string) => {
+    const queryString = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '';
+    const response = await fetch(`/api/jobs${queryString}`);
+    if (!response.ok) {
+      return;
+    }
+    const jobsData: Job[] = await response.json();
+    setJobs(jobsData);
+    if (!selectedJob && jobsData.length > 0) {
+      setSelectedJob(jobsData[0]);
+    }
+  };
+
+  // Processa o termo de busca, elimina prefixos genéricos e retorna resultados.
+  const handleSearch = async (query: string) => {
     const normalizedQuery = normalizeText(query);
     if (!normalizedQuery) {
       return;
     }
 
-    // Remove prefixos genéricos antes de procurar a vaga
     const strippedQuery = stripGenericPrefix(normalizedQuery);
-
-    // Se o usuário digitar apenas o prefixo, não busca e informa para ser mais específico
     if (isOnlyGenericPrefixQuery(normalizedQuery)) {
       window.alert('Digite um termo mais específico além de "estágio em" para buscar uma vaga.');
       return;
     }
 
-    // Se não houver um termo útil após remover o prefixo, não há vaga correspondente
     if (!strippedQuery) {
       window.alert(`Nenhum estágio encontrado para: ${query}`);
       return;
     }
 
-    // Permite busca por número de ID quando um número aparece na consulta
-    const queryIdMatch = normalizedQuery.match(/\b(\d+)\b/);
-    const foundJob = jobs.find((job) => {
-      const title = normalizeText(job.title);
-      const titleWithoutPrefix = stripGenericPrefix(title);
-      const tagsMatch = job.tags.some((tag) => normalizeText(tag).includes(strippedQuery));
-      const idMatch = queryIdMatch ? job.id === Number(queryIdMatch[1]) : false;
+    const response = await fetch(`/api/jobs?search=${encodeURIComponent(strippedQuery)}`);
+    if (!response.ok) {
+      window.alert('Não foi possível buscar vagas no momento.');
+      return;
+    }
 
-      return (
-        idMatch ||
-        title.includes(strippedQuery) ||
-        titleWithoutPrefix.includes(strippedQuery) ||
-        tagsMatch
-      );
-    });
+    const searchResults: Job[] = await response.json();
+    if (searchResults.length === 0) {
+      window.alert(`Nenhum estágio encontrado para: ${query}`);
+      return;
+    }
 
-    if (foundJob) {
-      setSelectedJobId(foundJob.id);
+    setJobs(searchResults);
+    setSelectedJob(searchResults[0]);
+    setCurrentPage('jobdetails');
+  };
+
+  // Seleciona uma vaga para exibir os detalhes. Busca do backend se necessário.
+  const handleJobClick = async (jobId: number) => {
+    const job = jobs.find((item) => item.id === jobId);
+    if (job) {
+      setSelectedJob(job);
       setCurrentPage('jobdetails');
       return;
     }
 
-    window.alert(`Nenhum estágio encontrado para: ${query}`);
-  };
+    const response = await fetch(`/api/jobs/${jobId}`);
+    if (!response.ok) {
+      window.alert('Não foi possível carregar a vaga.');
+      return;
+    }
 
-  const handleJobClick = (jobId: number) => {
-    setSelectedJobId(jobId);
+    const jobData: Job = await response.json();
+    setSelectedJob(jobData);
     setCurrentPage('jobdetails');
   };
 
-  // Navega para a página de candidatura quando o usuário clica no botão de aplicar
   const handleApplyNow = () => {
     setCurrentPage('application');
   };
 
-  // Renderiza páginas de fluxo separadas antes da página inicial
+  // Salva o token JWT e configura o estado de autenticação quando o login ou cadastro são bem-sucedidos.
+  const handleAuthSuccess = (token: string, user: AuthState['user']) => {
+    localStorage.setItem('token', token);
+    setAuth({ token, user });
+    setCurrentPage('home');
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem('token');
+    setAuth(null);
+    setCurrentPage('home');
+  };
+
+  const handleJobCreated = (job: Job) => {
+    setJobs((previous) => [job, ...previous]);
+    setSelectedJob(job);
+    setCurrentPage('jobdetails');
+  };
+
   if (currentPage === 'signup') {
-    return <SignUp onBackToHome={() => setCurrentPage('home')} />;
+    return <SignUp onBackToHome={() => setCurrentPage('home')} onAuthSuccess={handleAuthSuccess} />;
   }
 
   if (currentPage === 'signin') {
-    return <SignIn onBackToHome={() => setCurrentPage('home')} />;
+    return <SignIn onBackToHome={() => setCurrentPage('home')} onSignUp={() => setCurrentPage('signup')} onAuthSuccess={handleAuthSuccess} />;
   }
 
   if (currentPage === 'welcome') {
@@ -151,13 +208,14 @@ export default function App() {
   }
 
   if (currentPage === 'createjob') {
-    return <CreateJob onBackToCompany={() => setCurrentPage('company')} />;
+    return <CreateJob onBackToCompany={() => setCurrentPage('company')} token={auth?.token} onCreated={handleJobCreated} />;
   }
 
   if (currentPage === 'jobdetails') {
     return (
       <JobDetails
-        jobId={selectedJobId}
+        job={selectedJob}
+        jobs={jobs}
         onBackToHome={() => setCurrentPage('home')}
         onApplyNow={handleApplyNow}
       />
@@ -167,7 +225,8 @@ export default function App() {
   if (currentPage === 'application') {
     return (
       <ApplicationProcess
-        jobId={selectedJobId}
+        job={selectedJob}
+        jobs={jobs}
         onBackToJob={() => setCurrentPage('jobdetails')}
       />
     );
@@ -175,10 +234,15 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header onSignUp={() => setCurrentPage('signup')} onSignIn={() => setCurrentPage('signin')} />
+      <Header
+        onSignUp={() => setCurrentPage('signup')}
+        onSignIn={() => setCurrentPage('signin')}
+        userName={auth?.user.name}
+        onSignOut={handleSignOut}
+      />
       <HeroSection onSearch={handleSearch} />
       <Categories />
-      <FeaturedJobs onJobClick={handleJobClick} />
+      <FeaturedJobs jobs={jobs} onJobClick={handleJobClick} />
       <HowItWorks />
       <Testimonials />
       <Newsletter />

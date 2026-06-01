@@ -1,34 +1,50 @@
 import {
   Search, ArrowLeft, CheckCircle, Clock, FileText, Video, Users,
-  Upload, Send, AlertCircle, Calendar, Mail, Phone, Linkedin,
-  Github, Award, Briefcase, GraduationCap, MapPin
+  Upload, Send, AlertCircle, Calendar, Mail, Phone,
+  Github, Linkedin, Award, Briefcase, GraduationCap, MapPin
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
-import { jobs } from '../bd/jobs';
+import { Job } from '../types';
 
 interface ApplicationProcessProps {
-  jobId?: number;
+  job?: Job | null;
+  jobs: Job[];
   onBackToJob?: () => void;
 }
 
 // ApplicationProcess.tsx: página de candidatura e visualização das etapas do processo seletivo
-export function ApplicationProcess({ jobId, onBackToJob }: ApplicationProcessProps) {
+export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProcessProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     resume: null,
     coverLetter: '',
     portfolio: '',
     linkedin: '',
-    github: ''
+    github: '',
+    name: '',
+    email: '',
+    phone: '',
+    city: '',
   });
 
-  const job = jobs.find((item) => item.id === jobId) ?? {
+  const currentJob = job ?? jobs[0] ?? {
+    id: 0,
     title: 'Estágio em Desenvolvimento Web',
     company: 'TechCorp Brasil',
     logo: '💻',
     location: 'São Paulo, SP',
-    salary: 'R$ 1.500 - R$ 2.000'
-  }; 
+    salary: 'R$ 1.500 - R$ 2.000',
+    type: 'Remoto',
+    posted: '---',
+    tags: [],
+    featured: false,
+    description: '',
+    responsibilities: [],
+    requirements: [],
+    benefits: [],
+    companyInfo: { description: '', size: '', founded: '', website: '' },
+    stats: { applicants: 0, deadline: '---', views: 0 },
+  };
 
   // Etapas do processo seletivo exibidas no sidebar e na timeline
   const processSteps = [
@@ -131,15 +147,15 @@ export function ApplicationProcess({ jobId, onBackToJob }: ApplicationProcessPro
           <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center text-3xl">
-                {job.logo}
+                {currentJob.logo}
               </div>
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">{job.title}</h1>
-                <p className="text-gray-600">{job.company}</p>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">{currentJob.title}</h1>
+                <p className="text-gray-600">{currentJob.company}</p>
               </div>
               <div className="hidden md:flex flex-col items-end gap-1">
-                <span className="text-2xl font-bold text-green-600">{job.salary}</span>
-                <span className="text-sm text-gray-500">{job.location}</span>
+                <span className="text-2xl font-bold text-green-600">{currentJob.salary}</span>
+                <span className="text-sm text-gray-500">{currentJob.location}</span>
               </div>
             </div>
           </div>

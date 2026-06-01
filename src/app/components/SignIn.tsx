@@ -1,13 +1,47 @@
-import { Search, Mail, Lock, ArrowRight, CheckCircle, Briefcase, TrendingUp, Building2 } from 'lucide-react';
+import { Search, Mail, Lock, ArrowRight, Briefcase, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
+import { User } from '../types';
 
 // SignIn.tsx: página de login com layout responsivo e opções de acesso social
 interface SignInProps {
   onBackToHome?: () => void;
+  onSignUp?: () => void;
+  onAuthSuccess?: (token: string, user: User) => void;
 }
 
-export function SignIn({ onBackToHome }: SignInProps) {
+export function SignIn({ onBackToHome, onSignUp, onAuthSuccess }: SignInProps) {
   const [role, setRole] = useState<'candidate' | 'company'>('candidate');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        window.alert(data.error || 'Erro ao fazer login.');
+        return;
+      }
+
+      onAuthSuccess?.(data.token, data.user);
+    } catch (error) {
+      window.alert('Erro ao conectar com o servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header Simplificado */}
@@ -145,7 +179,7 @@ export function SignIn({ onBackToHome }: SignInProps) {
                 </button>
               </div>
 
-              <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); onBackToHome?.(); }}>
+              <form className="space-y-5" onSubmit={handleSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {role === 'candidate' ? 'Email' : 'Email da empresa'}
@@ -154,6 +188,8 @@ export function SignIn({ onBackToHome }: SignInProps) {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
                       placeholder="seu@email.com"
                       className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                       required
@@ -169,6 +205,8 @@ export function SignIn({ onBackToHome }: SignInProps) {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
                       placeholder="Digite sua senha"
                       className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                       required
@@ -213,9 +251,9 @@ export function SignIn({ onBackToHome }: SignInProps) {
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">
                   Não tem uma conta?{' '}
-                  <a href="#" className="text-blue-600 font-semibold hover:underline">
+                  <button type="button" onClick={() => onSignUp?.()} className="text-blue-600 font-semibold hover:underline">
                     Cadastre-se gratuitamente
-                  </a>
+                  </button>
                 </p>
               </div>
             </div>
