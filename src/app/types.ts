@@ -30,10 +30,19 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'candidate' | 'company';
-  companyName?: string | null;
-  companyAbout?: string | null;
-  website?: string | null;
+  role: 'candidate' | 'company' | 'admin';
+  company?: {
+    name: string;
+    phone: string;
+    about: string;
+    website?: string;
+  };
+  candidate?: {
+    phone: string;
+    city: string;
+    course: string;
+    period: string;
+  };
 }
 
 export interface AuthState {

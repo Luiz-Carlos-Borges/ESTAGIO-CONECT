@@ -3,13 +3,15 @@ import { FormEvent, useState } from 'react';
 
 // SignUp.tsx: fluxo de cadastro em duas etapas para criação de conta e informações acadêmicas
 interface SignUpProps {
+  initialRole?: 'candidate' | 'company';
   onBackToHome?: () => void;
+  onSignIn?: () => void;
   onAuthSuccess?: (token: string, user: any) => void;
 }
 
-export function SignUp({ onBackToHome, onAuthSuccess }: SignUpProps) {
+export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAuthSuccess }: SignUpProps) {
   const [step, setStep] = useState(1);
-  const [role, setRole] = useState<'candidate' | 'company'>('candidate');
+  const [role, setRole] = useState<'candidate' | 'company'>(initialRole);
   const [loading, setLoading] = useState(false);
 
   const [name, setName] = useState('');
@@ -23,7 +25,7 @@ export function SignUp({ onBackToHome, onAuthSuccess }: SignUpProps) {
   const [graduationYear, setGraduationYear] = useState('');
   const [city, setCity] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [companySite, setCompanySite] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
   const [companyAbout, setCompanyAbout] = useState('');
 
   const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
@@ -34,8 +36,9 @@ export function SignUp({ onBackToHome, onAuthSuccess }: SignUpProps) {
       return;
     }
 
-    if (!name || !email || !password) {
-      window.alert('Preencha nome, email e senha.');
+    const nameToValidate = role === 'company' ? companyName : name;
+    if (!nameToValidate || !email || !password) {
+      window.alert(role === 'company' ? 'Preencha nome da empresa, email e senha.' : 'Preencha nome, email e senha.');
       return;
     }
 
@@ -48,13 +51,21 @@ export function SignUp({ onBackToHome, onAuthSuccess }: SignUpProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name,
+          name: role === 'company' ? companyName : name,
           email,
           password,
           role,
-          companyName: role === 'company' ? companyName : null,
-          companyAbout: role === 'company' ? companyAbout : null,
-          website: role === 'company' ? companySite : null,
+          ...(role === 'company' && {
+            companyName,
+            companyPhone,
+            companyAbout,
+          }),
+          ...(role === 'candidate' && {
+            candidatePhone: phone,
+            candidateCity: city,
+            candidateCourse: course,
+            candidatePeriod: period,
+          }),
         }),
       });
 
@@ -97,7 +108,14 @@ export function SignUp({ onBackToHome, onAuthSuccess }: SignUpProps) {
               </div>
               <span className="text-xl font-bold text-gray-900">EstágioConnect</span>
             </div>
-            <a href="#" onClick={(e) => { e.preventDefault(); onBackToHome?.(); }} className="text-gray-600 hover:text-blue-600 transition">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                onSignIn?.();
+              }}
+              className="text-gray-600 hover:text-blue-600 transition"
+            >
               Já tem conta? <span className="font-semibold text-blue-600">Entrar</span>
             </a>
           </div>
@@ -470,8 +488,8 @@ export function SignUp({ onBackToHome, onAuthSuccess }: SignUpProps) {
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="tel"
-                        value={phone}
-                        onChange={(event) => setPhone(event.target.value)}
+                        value={companyPhone}
+                        onChange={(event) => setCompanyPhone(event.target.value)}
                         placeholder="(11) 99999-9999"
                         className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         required
@@ -480,19 +498,17 @@ export function SignUp({ onBackToHome, onAuthSuccess }: SignUpProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Site (opcional)</label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="url"
-                        value={companySite}
-                        onChange={(event) => setCompanySite(event.target.value)}
-                        placeholder="https://"
-                        className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
-                      />
-                    </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Sobre a empresa</label>
+                    <textarea
+                      value={companyAbout}
+                      onChange={(event) => setCompanyAbout(event.target.value)}
+                      placeholder="Descreva sua empresa em poucas linhas"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition resize-none"
+                      rows={3}
+                    />
                   </div>
 
+        
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <div className="relative">

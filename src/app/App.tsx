@@ -21,6 +21,7 @@ import { Job, AuthState } from './types';
 export default function App() {
   // Estado de navegação das páginas internas do aplicativo.
   const [currentPage, setCurrentPage] = useState<'welcome' | 'company' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('welcome');
+  const [authView, setAuthView] = useState<'candidate' | 'company'>('candidate');
   // Lista de vagas carregadas pelo backend.
   const [jobs, setJobs] = useState<Job[]>([]);
   // Vaga atualmente selecionada para visualizar detalhes ou aplicar.
@@ -169,6 +170,16 @@ export default function App() {
     setCurrentPage('home');
   };
 
+  const goToSignIn = (role: 'candidate' | 'company') => {
+    setAuthView(role);
+    setCurrentPage('signin');
+  };
+
+  const goToSignUp = (role: 'candidate' | 'company') => {
+    setAuthView(role);
+    setCurrentPage('signup');
+  };
+
   const handleSignOut = () => {
     localStorage.removeItem('token');
     setAuth(null);
@@ -182,18 +193,34 @@ export default function App() {
   };
 
   if (currentPage === 'signup') {
-    return <SignUp onBackToHome={() => setCurrentPage('home')} onAuthSuccess={handleAuthSuccess} />;
+    return (
+      <SignUp
+        initialRole={authView}
+        onBackToHome={() => setCurrentPage('home')}
+        onSignIn={() => goToSignIn(authView)}
+        onAuthSuccess={handleAuthSuccess}
+      />
+    );
   }
 
   if (currentPage === 'signin') {
-    return <SignIn onBackToHome={() => setCurrentPage('home')} onSignUp={() => setCurrentPage('signup')} onAuthSuccess={handleAuthSuccess} />;
+    return (
+      <SignIn
+        initialRole={authView}
+        onBackToHome={() => setCurrentPage('home')}
+        onSignUp={() => goToSignUp(authView)}
+        onAuthSuccess={handleAuthSuccess}
+      />
+    );
   }
 
   if (currentPage === 'welcome') {
     return (
       <WelcomeScreen
-        onStartAsStudent={() => setCurrentPage('home')}
-        onStartAsCompany={() => setCurrentPage('company')}
+        onStartAsStudent={() => goToSignIn('candidate')}
+        onCreateStudentAccount={() => goToSignUp('candidate')}
+        onStartAsCompany={() => goToSignIn('company')}
+        onCreateCompanyAccount={() => goToSignUp('company')}
       />
     );
   }

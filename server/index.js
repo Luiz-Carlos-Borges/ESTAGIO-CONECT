@@ -59,7 +59,20 @@ function authMiddleware(req, res, next) {
 // Rota de registro de usuário.
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password, role, companyName, companyAbout, website } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      companyName,
+      companyPhone,
+      companyAbout,
+      website,
+      candidatePhone,
+      candidateCity,
+      candidateCourse,
+      candidatePeriod,
+    } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: 'Campos obrigatórios não enviados.' });
@@ -76,9 +89,16 @@ app.post('/api/auth/register', async (req, res) => {
       email,
       passwordHash,
       role,
+      // Dados de empresa
       companyName: role === 'company' ? companyName : null,
+      companyPhone: role === 'company' ? companyPhone : null,
       companyAbout: role === 'company' ? companyAbout : null,
       website: role === 'company' ? website : null,
+      // Dados de candidato
+      candidatePhone: role === 'candidate' ? candidatePhone : null,
+      candidateCity: role === 'candidate' ? candidateCity : null,
+      candidateCourse: role === 'candidate' ? candidateCourse : null,
+      candidatePeriod: role === 'candidate' ? candidatePeriod : null,
     });
 
     const user = {
@@ -86,9 +106,22 @@ app.post('/api/auth/register', async (req, res) => {
       name,
       email,
       role,
-      companyName: role === 'company' ? companyName : null,
-      companyAbout: role === 'company' ? companyAbout : null,
-      website: role === 'company' ? website : null,
+      ...(role === 'company' && {
+        company: {
+          name: companyName,
+          phone: companyPhone,
+          about: companyAbout,
+          website,
+        },
+      }),
+      ...(role === 'candidate' && {
+        candidate: {
+          phone: candidatePhone,
+          city: candidateCity,
+          course: candidateCourse,
+          period: candidatePeriod,
+        },
+      }),
     };
 
     const token = createToken(user);
@@ -122,9 +155,22 @@ app.post('/api/auth/login', async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      companyName: user.companyName,
-      companyAbout: user.companyAbout,
-      website: user.website,
+      ...(user.role === 'company' && {
+        company: {
+          name: user.companyName,
+          phone: user.companyPhone,
+          about: user.companyAbout,
+          website: user.website,
+        },
+      }),
+      ...(user.role === 'candidate' && {
+        candidate: {
+          phone: user.candidatePhone,
+          city: user.candidateCity,
+          course: user.candidateCourse,
+          period: user.candidatePeriod,
+        },
+      }),
     };
     const token = createToken(payload);
     return res.json({ token, user: payload });

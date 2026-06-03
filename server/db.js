@@ -38,12 +38,42 @@ export async function initDatabase() {
       table.string('name').notNullable();
       table.string('email').notNullable().unique();
       table.string('passwordHash').notNullable();
-      table.string('role').notNullable();
+      table.string('role').notNullable(); // 'candidate', 'company', 'admin'
+      
+      // Campos de CANDIDATO
+      table.string('candidatePhone').nullable();
+      table.string('candidateCity').nullable();
+      table.string('candidateCourse').nullable();
+      table.string('candidatePeriod').nullable();
+      
+      // Campos de EMPRESA
       table.string('companyName').nullable();
-      table.string('companyAbout').nullable();
+      table.string('companyPhone').nullable();
+      table.text('companyAbout').nullable();
       table.string('website').nullable();
+      
       table.timestamp('createdAt').defaultTo(db.fn.now());
     });
+  } else {
+    // Verifica se as colunas já existem antes de tentar adicionar
+    const hasPhoneColumn = await db.schema.hasColumn('users', 'candidatePhone');
+    if (!hasPhoneColumn) {
+      // Adiciona colunas de candidato se não existirem
+      await db.schema.table('users', (table) => {
+        table.string('candidatePhone').nullable();
+        table.string('candidateCity').nullable();
+        table.string('candidateCourse').nullable();
+        table.string('candidatePeriod').nullable();
+      });
+    }
+    
+    const hasCompanyPhoneColumn = await db.schema.hasColumn('users', 'companyPhone');
+    if (!hasCompanyPhoneColumn) {
+      // Adiciona coluna de telefone de empresa se não existir
+      await db.schema.table('users', (table) => {
+        table.string('companyPhone').nullable();
+      });
+    }
   }
 
   const hasJobs = await db.schema.hasTable('jobs');
@@ -93,6 +123,13 @@ export async function initDatabase() {
   const seedCount = Number(existingJobs?.count ?? 0);
   if (seedCount === 0) {
     await seedInitialJobs();
+  }
+  
+  // Faz o id:7 virar admin
+  const user7 = await db('users').where({ id: 7 }).first();
+  if (user7 && user7.role !== 'admin') {
+    await db('users').where({ id: 7 }).update({ role: 'admin' });
+    console.log('✓ Usuário id:7 atualizado para admin');
   }
 }
 

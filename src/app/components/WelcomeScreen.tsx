@@ -3,10 +3,12 @@ import { Search, Users, Briefcase, ArrowRight, CheckCircle, Building2, Graduatio
 // WelcomeScreen.tsx: página de boas-vindas que permite escolher entre estudante ou empresa
 interface WelcomeScreenProps {
   onStartAsStudent: () => void;
+  onCreateStudentAccount: () => void;
   onStartAsCompany: () => void;
+  onCreateCompanyAccount: () => void;
 }
 
-export function WelcomeScreen({ onStartAsStudent, onStartAsCompany }: WelcomeScreenProps) {
+export function WelcomeScreen({ onStartAsStudent, onCreateStudentAccount, onStartAsCompany, onCreateCompanyAccount }: WelcomeScreenProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -92,6 +94,7 @@ export function WelcomeScreen({ onStartAsStudent, onStartAsCompany }: WelcomeScr
                   </button>
                   <button
                     type="button"
+                    onClick={onCreateStudentAccount}
                     className="w-full py-3 border-2 border-gray-200 text-gray-700 rounded-xl hover:border-blue-600 hover:text-blue-600 transition font-semibold"
                   >
                     Criar Conta Grátis
@@ -156,7 +159,7 @@ export function WelcomeScreen({ onStartAsStudent, onStartAsCompany }: WelcomeScr
                   Entrar como Empresa
                   <ArrowRight className="w-5 h-5" />
                 </button>
-                  <button className="w-full py-3 border-2 border-gray-200 text-gray-700 rounded-xl hover:border-purple-600 hover:text-purple-600 transition font-semibold" type="button">
+                  <button onClick={onCreateCompanyAccount} className="w-full py-3 border-2 border-gray-200 text-gray-700 rounded-xl hover:border-purple-600 hover:text-purple-600 transition font-semibold" type="button">
                     Cadastrar Empresa
                   </button>
                 </div>

@@ -4,13 +4,14 @@ import { User } from '../types';
 
 // SignIn.tsx: página de login com layout responsivo e opções de acesso social
 interface SignInProps {
+  initialRole?: 'candidate' | 'company';
   onBackToHome?: () => void;
   onSignUp?: () => void;
   onAuthSuccess?: (token: string, user: User) => void;
 }
 
-export function SignIn({ onBackToHome, onSignUp, onAuthSuccess }: SignInProps) {
-  const [role, setRole] = useState<'candidate' | 'company'>('candidate');
+export function SignIn({ initialRole = 'candidate', onBackToHome, onSignUp, onAuthSuccess }: SignInProps) {
+  const [role, setRole] = useState<'candidate' | 'company'>(initialRole);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,8 +57,15 @@ export function SignIn({ onBackToHome, onSignUp, onAuthSuccess }: SignInProps) {
             </div>
 
             
-            <a href="#" className="text-gray-600 hover:text-blue-600 transition">
-              Não tem conta? <span className="font-semibold text-blue-600">Cadastre-se</span>  
+            <a
+              href="#"
+              onClick={(event) => {
+                event.preventDefault();
+                onSignUp?.();
+              }}
+              className="text-gray-600 hover:text-blue-600 transition"
+            >
+              Não tem conta? <span className="font-semibold text-blue-600">Cadastre-se</span>
             </a>
           </div>
         </div>
