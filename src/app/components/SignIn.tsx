@@ -1,6 +1,7 @@
 import { Search, Mail, Lock, ArrowRight, Briefcase, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { User } from '../types';
+import { apiCall } from '../../config/api';
 
 // SignIn.tsx: página de login com layout responsivo e opções de acesso social
 interface SignInProps {
@@ -21,23 +22,19 @@ export function SignIn({ initialRole = 'candidate', onBackToHome, onSignUp, onAu
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const { data, error } = await apiCall('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        window.alert(data.error || 'Erro ao fazer login.');
+      if (error) {
+        window.alert(error);
         return;
       }
 
       onAuthSuccess?.(data.token, data.user);
     } catch (error) {
-      window.alert('Erro ao conectar com o servidor.');
+      window.alert('Erro inesperado ao fazer login.');
     } finally {
       setLoading(false);
     }

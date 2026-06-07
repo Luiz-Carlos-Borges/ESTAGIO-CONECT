@@ -331,6 +331,14 @@ app.use((error, req, res, next) => {
   return res.status(500).json({ error: 'Erro interno do servidor.' });
 });
 
+// Inicia o servidor
 app.listen(PORT, () => {
-  console.log(`Backend rodando em http://localhost:${PORT}`);
+  console.log('\n╔════════════════════════════════════════════╗');
+  console.log('║  🚀 EstágioConnect Backend Iniciado       ║');
+  console.log(`║  URL: http://localhost:${PORT}`.padEnd(45) + '║');
+  console.log('║  Banco de dados: SQLite                    ║');
+  console.log('║  CORS: Habilitado                          ║');
+  console.log('╚════════════════════════════════════════════╝\n');
+  console.log('Conecte o frontend em desenvolvimento com:');
+  console.log('  $ npm run dev\n');
 });

@@ -1,5 +1,6 @@
 import { Search, Mail, Lock, User, GraduationCap, Calendar, Phone, MapPin, ArrowRight, CheckCircle, Building } from 'lucide-react';
 import { FormEvent, useState } from 'react';
+import { apiCall } from '../../config/api';
 
 // SignUp.tsx: fluxo de cadastro em duas etapas para criação de conta e informações acadêmicas
 interface SignUpProps {
@@ -45,11 +46,8 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const { data, error } = await apiCall('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           name: role === 'company' ? companyName : name,
           email,
@@ -69,15 +67,14 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
         }),
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        window.alert(data.error || 'Erro ao cadastrar usuário.');
+      if (error) {
+        window.alert(error);
         return;
       }
 
       onAuthSuccess?.(data.token, data.user);
     } catch (error) {
-      window.alert('Erro ao conectar com o servidor.');
+      window.alert('Erro inesperado ao cadastrar.');
     } finally {
       setLoading(false);
     }
