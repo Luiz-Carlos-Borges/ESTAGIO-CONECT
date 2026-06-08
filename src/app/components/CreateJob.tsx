@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { FormEvent, KeyboardEvent, useState } from 'react';
 import type { Job } from '../types';
+import { apiCall } from '../../config/api';
 
 interface CreateJobProps {
   onBackToCompany: () => void;
@@ -124,22 +125,20 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
         deadline: deadline || 'A definir',
       };
 
-      const response = await fetch('/api/jobs', {
+      const { data, error } = await apiCall('/api/jobs', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-        window.alert(data.error || 'Erro ao publicar a vaga.');
+      if (error) {
+        window.alert(error || 'Erro ao publicar a vaga.');
         return;
       }
 
-      onCreated?.(data);
+      onCreated?.(data as Job);
       window.alert('Vaga publicada com sucesso.');
     } catch (error) {
       window.alert('Erro ao conectar com o servidor.');

@@ -17,6 +17,7 @@ import { SignIn } from './components/SignIn';
 import { JobDetails } from './components/JobDetails';
 import { ApplicationProcess } from './components/ApplicationProcess';
 import { Job, AuthState } from './types';
+import { apiCall } from '../config/api';
 
 export default function App() {
   // Estado de navegação das páginas internas do aplicativo.
@@ -71,16 +72,15 @@ export default function App() {
     loadJobs();
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('/api/auth/me', {
+      apiCall('/api/auth/me', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
-        .then((response) => {
-          if (!response.ok) throw new Error('Token inválido');
-          return response.json();
-        })
-        .then((data) => {
+        .then(({ data, error }) => {
+          if (error || !data?.user) {
+            throw new Error('Token inválido');
+          }
           setAuth({ token, user: data.user });
         })
         .catch(() => {
@@ -93,11 +93,11 @@ export default function App() {
   // Faz requisição ao backend para buscar as vagas, com pesquisa opcional.
   const loadJobs = async (searchQuery?: string) => {
     const queryString = searchQuery ? `?search=${encodeURIComponent(searchQuery)}` : '';
-    const response = await fetch(`/api/jobs${queryString}`);
-    if (!response.ok) {
+    const { data, error } = await apiCall(`/api/jobs${queryString}`);
+    if (error || !Array.isArray(data)) {
       return;
     }
-    const jobsData: Job[] = await response.json();
+    const jobsData = data as Job[];
     setJobs(jobsData);
     if (!selectedJob && jobsData.length > 0) {
       setSelectedJob(jobsData[0]);
@@ -122,13 +122,13 @@ export default function App() {
       return;
     }
 
-    const response = await fetch(`/api/jobs?search=${encodeURIComponent(strippedQuery)}`);
-    if (!response.ok) {
+    const { data, error } = await apiCall(`/api/jobs?search=${encodeURIComponent(strippedQuery)}`);
+    if (error || !Array.isArray(data)) {
       window.alert('Não foi possível buscar vagas no momento.');
       return;
     }
 
-    const searchResults: Job[] = await response.json();
+    const searchResults = data as Job[];
     if (searchResults.length === 0) {
       window.alert(`Nenhum estágio encontrado para: ${query}`);
       return;
@@ -148,14 +148,13 @@ export default function App() {
       return;
     }
 
-    const response = await fetch(`/api/jobs/${jobId}`);
-    if (!response.ok) {
+    const { data, error } = await apiCall(`/api/jobs/${jobId}`);
+    if (error || !data) {
       window.alert('Não foi possível carregar a vaga.');
       return;
     }
 
-    const jobData: Job = await response.json();
-    setSelectedJob(jobData);
+    setSelectedJob(data as Job);
     setCurrentPage('jobdetails');
   };
 
