@@ -115,8 +115,17 @@ export async function initDatabase() {
       table.string('github').nullable();
       table.text('coverLetter').nullable();
       table.string('resumePath').notNullable();
+      table.string('status').defaultTo('novo'); // 'novo', 'em-analise', 'aceito', 'rejeitado'
       table.timestamp('createdAt').defaultTo(db.fn.now());
     });
+  } else {
+    // Adiciona coluna status se não existir
+    const hasStatusColumn = await db.schema.hasColumn('applications', 'status');
+    if (!hasStatusColumn) {
+      await db.schema.table('applications', (table) => {
+        table.string('status').defaultTo('novo');
+      });
+    }
   }
 
   const existingJobs = await db('jobs').count('id as count').first();

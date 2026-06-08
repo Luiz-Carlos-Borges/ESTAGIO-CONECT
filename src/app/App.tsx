@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Header } from './components/Header';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { CompanyHeroSection } from './components/CompanyHeroSection';
+import { CompanyDashboard } from './components/CompanyDashboard';
 import { CreateJob } from './components/CreateJob';
 import { HeroSection } from './components/HeroSection';
 import { Categories } from './components/Categories';
@@ -21,7 +22,7 @@ import { apiCall } from '../config/api';
 
 export default function App() {
   // Estado de navegação das páginas internas do aplicativo.
-  const [currentPage, setCurrentPage] = useState<'welcome' | 'company' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('welcome');
+  const [currentPage, setCurrentPage] = useState<'welcome' | 'company' | 'company-dashboard' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('welcome');
   const [authView, setAuthView] = useState<'candidate' | 'company'>('candidate');
   // Lista de vagas carregadas pelo backend.
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -166,7 +167,12 @@ export default function App() {
   const handleAuthSuccess = (token: string, user: AuthState['user']) => {
     localStorage.setItem('token', token);
     setAuth({ token, user });
-    setCurrentPage('home');
+    // Redirecionar empresa para o dashboard, candidato para home
+    if (user.role === 'company') {
+      setCurrentPage('company-dashboard');
+    } else {
+      setCurrentPage('home');
+    }
   };
 
   const goToSignIn = (role: 'candidate' | 'company') => {
@@ -233,8 +239,36 @@ export default function App() {
     );
   }
 
+  if (currentPage === 'company-dashboard') {
+    return auth?.user.role === 'company' && auth.user ? (
+      <CompanyDashboard
+        user={auth.user}
+        onBackToHome={() => setCurrentPage('home')}
+        onCreateJob={() => setCurrentPage('createjob')}
+        onLogout={handleSignOut}
+      />
+    ) : (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Redirecionando...</p>
+      </div>
+    );
+  }
+
   if (currentPage === 'createjob') {
-    return <CreateJob onBackToCompany={() => setCurrentPage('company')} token={auth?.token} onCreated={handleJobCreated} />;
+    return (
+      <CreateJob
+        onBackToCompany={() => {
+          // Se veio do dashboard, volta para o dashboard
+          if (auth?.user.role === 'company') {
+            setCurrentPage('company-dashboard');
+          } else {
+            setCurrentPage('company');
+          }
+        }}
+        token={auth?.token}
+        onCreated={handleJobCreated}
+      />
+    );
   }
 
   if (currentPage === 'jobdetails') {

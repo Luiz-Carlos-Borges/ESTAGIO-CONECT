@@ -223,6 +223,82 @@ app.get('/api/jobs/:id', async (req, res) => {
   }
 });
 
+// Rota para empresas ver suas vagas publicadas (exige autenticação)
+app.get('/api/jobs/my-jobs', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'company') {
+      return res.status(403).json({ error: 'Apenas empresas podem acessar suas vagas.' });
+    }
+
+    const rows = await db('jobs')
+      .where({ ownerId: req.user.id })
+      .orderBy('createdAt', 'desc');
+    
+    return res.json(rows.map(formatJob));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao buscar vagas.' });
+  }
+});
+
+// Rota para ver candidaturas de uma vaga específica (exige autenticação)
+app.get('/api/jobs/:jobId/applications', authMiddleware, async (req, res) => {
+  try {
+    const jobId = Number(req.params.jobId);
+    
+    // Verificar se a empresa é dona da vaga
+    const job = await db('jobs').where({ id: jobId }).first();
+    if (!job) {
+      return res.status(404).json({ error: 'Vaga não encontrada.' });
+    }
+    
+    if (job.ownerId !== req.user.id) {
+      return res.status(403).json({ error: 'Você não tem permissão para ver as candidaturas desta vaga.' });
+    }
+
+    const applications = await db('applications')
+      .where({ jobId })
+      .orderBy('createdAt', 'desc');
+    
+    return res.json(applications);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao buscar candidaturas.' });
+  }
+});
+
+// Rota para atualizar status de uma candidatura (exige autenticação)
+app.patch('/api/applications/:appId', authMiddleware, async (req, res) => {
+  try {
+    const appId = Number(req.params.appId);
+    const { status } = req.body;
+
+    if (!status || !['novo', 'em-analise', 'aceito', 'rejeitado'].includes(status)) {
+      return res.status(400).json({ error: 'Status inválido.' });
+    }
+
+    const application = await db('applications').where({ id: appId }).first();
+    if (!application) {
+      return res.status(404).json({ error: 'Candidatura não encontrada.' });
+    }
+
+    // Verificar se a empresa é dona da vaga
+    const job = await db('jobs').where({ id: application.jobId }).first();
+    if (!job || job.ownerId !== req.user.id) {
+      return res.status(403).json({ error: 'Você não tem permissão para atualizar esta candidatura.' });
+    }
+
+    await db('applications').where({ id: appId }).update({ status });
+    
+    const updated = await db('applications').where({ id: appId }).first();
+    return res.json(updated);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao atualizar candidatura.' });
+  }
+});
+
+
 // Rota para empresas publicarem novas vagas (exige autenticação).
 app.post('/api/jobs', authMiddleware, async (req, res) => {
   try {
