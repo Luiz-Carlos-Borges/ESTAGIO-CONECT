@@ -17,29 +17,43 @@ export function SignIn({ initialRole = 'candidate', onBackToHome, onSignUp, onAu
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setLoading(true);
+const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  setLoading(true);
 
-    try {
-      const { data, error } = await apiCall('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      });
+  try {
+    const { data, error } = await apiCall('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, role }),
+    });
 
-      if (error) {
-        window.alert(error);
-        return;
-      }
-
-      onAuthSuccess?.(data.token, data.user);
-    } catch (error) {
-      window.alert('Erro inesperado ao fazer login.');
-    } finally {
-      setLoading(false);
+    if (error) {
+      window.alert(error);
+      return;
     }
-  };
 
+    const user = data.user;
+
+    // Admin pode entrar pelo acesso de empresa
+    const effectiveRole = user.role === 'admin' ? 'company' : user.role;
+
+    if (effectiveRole !== role) {
+      window.alert(
+        role === 'company'
+          ? 'Esta conta não é de empresa. Use o acesso de Candidato.'
+          : 'Esta conta é de candidato. Use o acesso de Empresa.'
+      );
+      return;
+    }
+
+    // Passa o user com role ajustado para admin entrar como company
+    onAuthSuccess?.(data.token, { ...user, role: effectiveRole });
+  } catch {
+    window.alert('Erro inesperado ao fazer login.');
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header Simplificado */}

@@ -1,9 +1,11 @@
+// CompanyDashboard.tsx — inclui a nova aba "Perfil da Empresa"
 import { useState } from 'react';
-import { ArrowLeft, Briefcase, Users, Filter, Plus, LogOut } from 'lucide-react';
+import { ArrowLeft, Briefcase, Users, Filter, Plus, LogOut, Building2 } from 'lucide-react';
 import type { Job, User } from '../types';
 import { PublishedJobs } from './PublishedJobs';
 import { ApplicationsList } from './ApplicationsList';
 import { ScreeningPanel } from './ScreeningPanel';
+import { CompanyProfile } from './CompanyProfile';
 
 export interface Application {
   id: number;
@@ -35,16 +37,15 @@ export function CompanyDashboard({
   onCreateJob,
   onLogout,
 }: CompanyDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'jobs' | 'applications' | 'screening'>('jobs');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'applications' | 'screening' | 'profile'>('jobs');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [currentUser, setCurrentUser] = useState<User>(user);
 
-  // Função para selecionar vaga e ir para a aba de candidaturas
   const handleSelectJobForApplications = (job: Job) => {
     setSelectedJob(job);
     setActiveTab('applications');
   };
 
-  // Função para selecionar vaga e ir para triagem
   const handleSelectJobForScreening = (job: Job) => {
     setSelectedJob(job);
     setActiveTab('screening');
@@ -54,6 +55,7 @@ export function CompanyDashboard({
     { id: 'jobs', label: 'Vagas Publicadas', icon: Briefcase },
     { id: 'applications', label: 'Candidaturas', icon: Users },
     { id: 'screening', label: 'Triagem', icon: Filter },
+    { id: 'profile', label: 'Perfil da Empresa', icon: Building2 },
   ] as const;
 
   return (
@@ -74,7 +76,7 @@ export function CompanyDashboard({
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Painel da Empresa
                 </h1>
-                <p className="text-sm text-gray-500">{user.company?.name || 'Sua Empresa'}</p>
+                <p className="text-sm text-gray-500">{currentUser.company?.name || 'Sua Empresa'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -101,7 +103,7 @@ export function CompanyDashboard({
       {/* Tabs Navigation */}
       <div className="border-b border-gray-200 bg-white">
         <div className="container mx-auto px-4">
-          <nav className="flex gap-8">
+          <nav className="flex gap-2 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -109,7 +111,7 @@ export function CompanyDashboard({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-4 font-semibold transition border-b-2 ${
+                  className={`flex items-center gap-2 px-4 py-4 font-semibold transition border-b-2 whitespace-nowrap ${
                     isActive
                       ? 'border-blue-600 text-blue-600'
                       : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -127,13 +129,16 @@ export function CompanyDashboard({
       {/* Content */}
       <main className="container mx-auto px-4 py-8">
         {activeTab === 'jobs' && (
-          <PublishedJobs user={user} onSelectJob={handleSelectJobForApplications} />
+          <PublishedJobs user={currentUser} onSelectJob={handleSelectJobForApplications} />
         )}
         {activeTab === 'applications' && (
-          <ApplicationsList user={user} selectedJob={selectedJob} onSelectJob={handleSelectJobForScreening} />
+          <ApplicationsList user={currentUser} selectedJob={selectedJob} onSelectJob={handleSelectJobForScreening} />
         )}
         {activeTab === 'screening' && (
-          <ScreeningPanel user={user} selectedJob={selectedJob} onSelectJob={handleSelectJobForApplications} />
+          <ScreeningPanel user={currentUser} selectedJob={selectedJob} onSelectJob={handleSelectJobForApplications} />
+        )}
+        {activeTab === 'profile' && (
+          <CompanyProfile user={currentUser} onUserUpdate={setCurrentUser} />
         )}
       </main>
     </div>
