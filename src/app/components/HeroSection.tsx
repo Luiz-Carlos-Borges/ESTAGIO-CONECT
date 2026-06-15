@@ -56,25 +56,6 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <span className="text-sm text-gray-600">
-              Áreas populares:
-            </span>
-
-            <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-blue-600 hover:text-blue-600 transition">
-              Tecnologia
-            </button>
-
-            <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-blue-600 hover:text-blue-600 transition">
-              Marketing
-            </button>
-
-            <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-blue-600 hover:text-blue-600 transition">
-              Design
-            </button>
-
-            <button className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-blue-600 hover:text-blue-600 transition">
-              Administração
-            </button>
           </div>
 
         </div>

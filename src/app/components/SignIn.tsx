@@ -34,10 +34,13 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 
     const user = data.user;
 
-    // Admin pode entrar pelo acesso de empresa
-    const effectiveRole = user.role === 'admin' ? 'company' : user.role;
+    // Conta admin é híbrida: assume o papel escolhido na tela de login
+    if (user.role === 'admin') {
+      onAuthSuccess?.(data.token, { ...user, role });
+      return;
+    }
 
-    if (effectiveRole !== role) {
+    if (user.role !== role) {
       window.alert(
         role === 'company'
           ? 'Esta conta não é de empresa. Use o acesso de Candidato.'
@@ -46,8 +49,7 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
       return;
     }
 
-    // Passa o user com role ajustado para admin entrar como company
-    onAuthSuccess?.(data.token, { ...user, role: effectiveRole });
+    onAuthSuccess?.(data.token, user);
   } catch {
     window.alert('Erro inesperado ao fazer login.');
   } finally {
@@ -235,14 +237,6 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="remember"
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-600"
-                    />
-                    <label htmlFor="remember" className="text-sm text-gray-600">
-                      Lembrar-me
-                    </label>
                   </div>
                   <a href="#" className="text-sm text-blue-600 hover:underline">
                     Esqueceu a senha?

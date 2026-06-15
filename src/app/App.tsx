@@ -7,11 +7,9 @@ import { CompanyHeroSection } from './components/CompanyHeroSection';
 import { CompanyDashboard } from './components/CompanyDashboard';
 import { CreateJob } from './components/CreateJob';
 import { HeroSection } from './components/HeroSection';
-import { Categories } from './components/Categories';
 import { FeaturedJobs } from './components/FeaturedJobs';
 import { HowItWorks } from './components/HowItWorks';
 import { Testimonials } from './components/Testimonials';
-import { Newsletter } from './components/Newsletter';
 import { Footer } from './components/Footer';
 import { SignUp } from './components/SignUp';
 import { SignIn } from './components/SignIn';
@@ -194,7 +192,13 @@ export default function App() {
   const handleJobCreated = (job: Job) => {
     setJobs((previous) => [job, ...previous]);
     setSelectedJob(job);
-    setCurrentPage('jobdetails');
+
+    // Empresa/admin volta para o painel; candidato vê os detalhes da vaga
+    if (auth?.user.role === 'company' || auth?.user.role === 'admin') {
+      setCurrentPage('company-dashboard');
+    } else {
+      setCurrentPage('jobdetails');
+    }
   };
 
   if (currentPage === 'signup') {
@@ -301,11 +305,9 @@ export default function App() {
         onSignOut={handleSignOut}
       />
       <HeroSection onSearch={handleSearch} />
-      <Categories />
       <FeaturedJobs jobs={jobs} onJobClick={handleJobClick} />
       <HowItWorks />
       <Testimonials />
-      <Newsletter />
       <Footer />
     </div>
   );

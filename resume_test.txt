@@ -1,1 +1,0 @@
-Curriculo de Teste\nNome: Candidato Teste\nEmail: candidato@test.local\nExperiencia: Nenhuma

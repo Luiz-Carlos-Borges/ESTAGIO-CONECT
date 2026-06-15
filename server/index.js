@@ -226,7 +226,7 @@ app.get('/api/jobs/:id', async (req, res) => {
 // Rota para empresas ver suas vagas publicadas (exige autenticação)
 app.get('/api/jobs/my-jobs', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'company') {
+    if (req.user.role !== 'company' && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Apenas empresas podem acessar suas vagas.' });
     }
 
@@ -302,7 +302,7 @@ app.patch('/api/applications/:appId', authMiddleware, async (req, res) => {
 // Rota para empresas publicarem novas vagas (exige autenticação).
 app.post('/api/jobs', authMiddleware, async (req, res) => {
   try {
-    if (req.user.role !== 'company') {
+    if (req.user.role !== 'company' && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Apenas empresas podem publicar vagas.' });
     }
 
