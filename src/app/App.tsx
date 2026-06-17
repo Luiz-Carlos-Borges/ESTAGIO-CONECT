@@ -1,6 +1,6 @@
 // App.tsx: componente raiz do aplicativo
 // Gerencia a navegação de páginas internas e o estado de seleção de vagas.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Header } from './components/Header';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { CompanyHeroSection } from './components/CompanyHeroSection';
@@ -18,10 +18,48 @@ import { ApplicationProcess } from './components/ApplicationProcess';
 import { Job, AuthState } from './types';
 import { apiCall } from '../config/api';
 
+type Page = 'welcome' | 'company' | 'company-dashboard' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application';
+
 export default function App() {
+  const getInitialPage = (): Page => {
+    const validPages = new Set<Page>(['welcome', 'company', 'company-dashboard', 'createjob', 'home', 'signup', 'signin', 'jobdetails', 'application']);
+    const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('token'));
+    if (!hasToken) {
+      return 'welcome';
+    }
+
+    const historyState = typeof window !== 'undefined' ? (window.history.state as { page?: Page } | null) : null;
+    if (historyState?.page && validPages.has(historyState.page)) {
+      return historyState.page;
+    }
+
+    const savedPage = typeof window !== 'undefined' ? localStorage.getItem('ESTAGIO_CONNECT_currentPage') : null;
+    return savedPage && validPages.has(savedPage as Page) ? (savedPage as Page) : 'welcome';
+  };
+
+  const getInitialAuthView = (): 'candidate' | 'company' => {
+    if (typeof window !== 'undefined') {
+      const historyState = window.history.state as { authView?: 'candidate' | 'company' } | null;
+      if (historyState?.authView) {
+        return historyState.authView;
+      }
+    }
+
+    const savedView = typeof window !== 'undefined' ? localStorage.getItem('ESTAGIO_CONNECT_authView') : null;
+    return savedView === 'company' ? 'company' : 'candidate';
+  };
+
+  const getInitialSelectedJobId = () => {
+    const savedJobId = localStorage.getItem('ESTAGIO_CONNECT_selectedJobId');
+    const parsedId = savedJobId ? Number(savedJobId) : NaN;
+    return Number.isInteger(parsedId) ? parsedId : null;
+  };
+
   // Estado de navegação das páginas internas do aplicativo.
-  const [currentPage, setCurrentPage] = useState<'welcome' | 'company' | 'company-dashboard' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>('welcome');
-  const [authView, setAuthView] = useState<'candidate' | 'company'>('candidate');
+  const [currentPage, setCurrentPage] = useState<'welcome' | 'company' | 'company-dashboard' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>(getInitialPage);
+  const [authView, setAuthView] = useState<'candidate' | 'company'>(getInitialAuthView);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(getInitialSelectedJobId);
+  const pendingPageRef = useRef<Page | null>(null);
   // Lista de vagas carregadas pelo backend.
   const [jobs, setJobs] = useState<Job[]>([]);
   // Vaga atualmente selecionada para visualizar detalhes ou aplicar.
@@ -81,12 +119,60 @@ export default function App() {
             throw new Error('Token inválido');
           }
           setAuth({ token, user: data.user });
+          if (currentPage === 'welcome' || currentPage === 'signup' || currentPage === 'signin') {
+            setCurrentPage(data.user.role === 'company' ? 'company-dashboard' : 'home');
+          }
         })
         .catch(() => {
           localStorage.removeItem('token');
           setAuth(null);
         });
     }
+  }, []);
+
+  useEffect(() => {
+    const state = { page: currentPage, authView, selectedJobId };
+    if (window.history.state?.page !== currentPage || window.history.state?.authView !== authView || window.history.state?.selectedJobId !== selectedJobId) {
+      window.history.pushState(state, '', window.location.pathname);
+    }
+
+    localStorage.setItem('ESTAGIO_CONNECT_currentPage', currentPage);
+    localStorage.setItem('ESTAGIO_CONNECT_authView', authView);
+    if (selectedJobId !== null) {
+      localStorage.setItem('ESTAGIO_CONNECT_selectedJobId', String(selectedJobId));
+    } else {
+      localStorage.removeItem('ESTAGIO_CONNECT_selectedJobId');
+    }
+  }, [currentPage, authView, selectedJobId]);
+
+  useEffect(() => {
+    const onPopState = (event: PopStateEvent) => {
+      const state = event.state as { page?: Page; authView?: 'candidate' | 'company'; selectedJobId?: number } | null;
+      if (state?.page) {
+        pendingPageRef.current = state.page;
+        setCurrentPage(state.page);
+      }
+      if (state?.authView) {
+        setAuthView(state.authView);
+      }
+      if (typeof state?.selectedJobId === 'number') {
+        setSelectedJobId(state.selectedJobId);
+      }
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // Scroll to footer on initial app load if present
+  useEffect(() => {
+    // Wait a tick to ensure DOM mounted
+    setTimeout(() => {
+      const footer = document.getElementById('site-footer');
+      if (footer) {
+        footer.scrollIntoView({ behavior: 'auto' });
+      }
+    }, 50);
   }, []);
 
   // Faz requisição ao backend para buscar as vagas, com pesquisa opcional.
@@ -98,8 +184,17 @@ export default function App() {
     }
     const jobsData = data as Job[];
     setJobs(jobsData);
+    if (selectedJobId) {
+      const savedJob = jobsData.find((job) => job.id === selectedJobId);
+      if (savedJob) {
+        setSelectedJob(savedJob);
+        return;
+      }
+    }
+
     if (!selectedJob && jobsData.length > 0) {
       setSelectedJob(jobsData[0]);
+      setSelectedJobId(jobsData[0].id);
     }
   };
 
@@ -135,6 +230,7 @@ export default function App() {
 
     setJobs(searchResults);
     setSelectedJob(searchResults[0]);
+    setSelectedJobId(searchResults[0].id);
     setCurrentPage('jobdetails');
   };
 
@@ -143,6 +239,7 @@ export default function App() {
     const job = jobs.find((item) => item.id === jobId);
     if (job) {
       setSelectedJob(job);
+      setSelectedJobId(job.id);
       setCurrentPage('jobdetails');
       return;
     }
@@ -184,9 +281,12 @@ export default function App() {
   };
 
   const handleSignOut = () => {
+    const signOutRole = auth?.user.role === 'company' ? 'company' : 'candidate';
     localStorage.removeItem('token');
     setAuth(null);
-    setCurrentPage('home');
+    setAuthView(signOutRole);
+    setSelectedJobId(null);
+    setCurrentPage('signin');
   };
 
   const handleJobCreated = (job: Job) => {
@@ -247,7 +347,7 @@ export default function App() {
     return auth?.user.role === 'company' && auth.user ? (
       <CompanyDashboard
         user={auth.user}
-        onBackToHome={() => setCurrentPage('home')}
+        onBackToCompany={() => setCurrentPage('company-dashboard')}
         onCreateJob={() => setCurrentPage('createjob')}
         onLogout={handleSignOut}
       />

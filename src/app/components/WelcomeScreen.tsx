@@ -1,3 +1,4 @@
+import { useState, MouseEvent } from 'react';
 import { Search, Users, Briefcase, ArrowRight, CheckCircle, Building2, GraduationCap, TrendingUp, Award } from 'lucide-react';
 
 // WelcomeScreen.tsx: página de boas-vindas que permite escolher entre estudante ou empresa
@@ -9,6 +10,17 @@ interface WelcomeScreenProps {
 }
 
 export function WelcomeScreen({ onStartAsStudent, onCreateStudentAccount, onStartAsCompany, onCreateCompanyAccount }: WelcomeScreenProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalContent, setModalContent] = useState('');
+
+  const handleFooterLink = (event: MouseEvent<HTMLAnchorElement>, title: string) => {
+    event.preventDefault();
+    setModalTitle(title);
+    setModalContent('Conteúdo de ' + title + ' em construção. Volte em breve!');
+    setModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -47,9 +59,7 @@ export function WelcomeScreen({ onStartAsStudent, onCreateStudentAccount, onStar
               <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <div className="absolute inset-0 bg-black/10"></div>
                 <GraduationCap className="w-24 h-24 text-white relative z-10" />
-                <div className="absolute top-4 right-4 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold">
-                  Popular
-                </div>
+
               </div>
 
               <div className="p-8">
@@ -114,9 +124,7 @@ export function WelcomeScreen({ onStartAsStudent, onCreateStudentAccount, onStar
               <div className="relative h-48 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
                 <div className="absolute inset-0 bg-black/10"></div>
                 <Building2 className="w-24 h-24 text-white relative z-10" />
-                <div className="absolute top-4 right-4 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold">
-                  Premium
-                </div>
+
               </div>
 
               <div className="p-8">
@@ -240,15 +248,40 @@ export function WelcomeScreen({ onStartAsStudent, onCreateStudentAccount, onStar
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600">
             <p>© 2026 EstágioConnect. Todos os direitos reservados.</p>
             <div className="flex gap-6">
-              <a href="#" className="hover:text-blue-600 transition">Sobre</a>
-              <a href="#" className="hover:text-blue-600 transition">Ajuda</a>
-              <a href="#" className="hover:text-blue-600 transition">Termos</a>
-              <a href="#" className="hover:text-blue-600 transition">Privacidade</a>
-              <a href="#" className="hover:text-blue-600 transition">Contato</a>
+              <a href="#" onClick={(event) => handleFooterLink(event, 'Sobre')} className="hover:text-blue-600 transition">Sobre</a>
+              <a href="#" onClick={(event) => handleFooterLink(event, 'Ajuda')} className="hover:text-blue-600 transition">Ajuda</a>
+              <a href="#" onClick={(event) => handleFooterLink(event, 'Termos')} className="hover:text-blue-600 transition">Termos</a>
+              <a href="#" onClick={(event) => handleFooterLink(event, 'Privacidade')} className="hover:text-blue-600 transition">Privacidade</a>
+              <a href="#" onClick={(event) => handleFooterLink(event, 'Contato')} className="hover:text-blue-600 transition">Contato</a>
             </div>
           </div>
         </div>
       </footer>
+
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{modalTitle}</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="text-gray-500 hover:text-gray-900"
+              >
+                Fechar
+              </button>
+            </div>
+            <textarea
+              value={modalContent}
+              onChange={(event) => setModalContent(event.target.value)}
+              placeholder="Escreva aqui o texto que deve aparecer nesta seção..."
+              className="w-full h-40 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

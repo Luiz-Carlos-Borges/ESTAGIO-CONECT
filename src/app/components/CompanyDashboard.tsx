@@ -26,14 +26,14 @@ export interface Application {
 
 interface CompanyDashboardProps {
   user: User;
-  onBackToHome: () => void;
+  onBackToCompany: () => void;
   onCreateJob: () => void;
   onLogout: () => void;
 }
 
 export function CompanyDashboard({
   user,
-  onBackToHome,
+  onBackToCompany,
   onCreateJob,
   onLogout,
 }: CompanyDashboardProps) {
@@ -66,9 +66,9 @@ export function CompanyDashboard({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={onBackToHome}
+                onClick={onBackToCompany}
                 className="inline-flex items-center justify-center p-2 rounded-lg hover:bg-gray-100 transition"
-                title="Voltar para home"
+                title="Voltar para o painel da empresa"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
@@ -80,6 +80,14 @@ export function CompanyDashboard({
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={onBackToCompany}
+                className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-2 text-gray-700 font-semibold hover:bg-gray-100 transition"
+                title="Voltar ao painel da empresa"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Voltar
+              </button>
               <button
                 onClick={onCreateJob}
                 className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2 text-white font-semibold hover:shadow-lg transition"

@@ -115,7 +115,7 @@ export function ScreeningPanel({ user, selectedJob, onSelectJob }: ScreeningPane
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Job Selector and Navigation */}
+      {/* Seletor de vaga e navegação */}
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:gap-4">
         <div className="flex-1">
           <label htmlFor="job-select-screening" className="block text-sm font-semibold text-gray-700 mb-3">
@@ -211,7 +211,7 @@ export function ScreeningPanel({ user, selectedJob, onSelectJob }: ScreeningPane
                     </div>
                   </button>
 
-                  {/* Expanded Content */}
+                  {/* Conteúdo Expandido */}
                   {expandedApp === app.id && (
                     <div className="border-t border-gray-200 px-6 py-6 bg-gray-50 space-y-6">
                       {/* Informações de Contato */}

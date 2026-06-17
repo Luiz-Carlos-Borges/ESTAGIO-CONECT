@@ -210,20 +210,8 @@ app.get('/api/jobs', async (req, res) => {
   }
 });
 
-app.get('/api/jobs/:id', async (req, res) => {
-  try {
-    const row = await db('jobs').where({ id: Number(req.params.id) }).first();
-    if (!row) {
-      return res.status(404).json({ error: 'Vaga não encontrada.' });
-    }
-    return res.json(formatJob(row));
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Erro ao buscar vaga.' });
-  }
-});
-
 // Rota para empresas ver suas vagas publicadas (exige autenticação)
+// Deve vir antes da rota genérica /api/jobs/:id para evitar conflito com o caminho "my-jobs".
 app.get('/api/jobs/my-jobs', authMiddleware, async (req, res) => {
   try {
     if (req.user.role !== 'company' && req.user.role !== 'admin') {
@@ -238,6 +226,19 @@ app.get('/api/jobs/my-jobs', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Erro ao buscar vagas.' });
+  }
+});
+
+app.get('/api/jobs/:id', async (req, res) => {
+  try {
+    const row = await db('jobs').where({ id: Number(req.params.id) }).first();
+    if (!row) {
+      return res.status(404).json({ error: 'Vaga não encontrada.' });
+    }
+    return res.json(formatJob(row));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao buscar vaga.' });
   }
 });
 

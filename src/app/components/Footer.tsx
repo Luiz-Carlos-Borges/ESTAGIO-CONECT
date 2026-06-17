@@ -3,7 +3,7 @@ import { Search, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-
 // Footer.tsx: rodapé com links de navegação e redes sociais
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer id="site-footer" className="bg-gray-900 text-gray-300">
       <div className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
           <div className="lg:col-span-2">
@@ -61,10 +61,6 @@ export function Footer() {
             <h3 className="text-white font-semibold mb-4">Sobre</h3>
             <ul className="space-y-2">
               <li><a href="#" className="hover:text-blue-500 transition">Sobre Nós</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition">Contato</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition">Carreiras</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition">Imprensa</a></li>
-              <li><a href="#" className="hover:text-blue-500 transition">Parceiros</a></li>
             </ul>
           </div>
         </div>

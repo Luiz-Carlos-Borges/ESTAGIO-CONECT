@@ -92,7 +92,7 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
             <div className="hidden lg:block space-y-8">
               <div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Bem-vindo de volta!
+                  Bem-vindo(a)!
                 </h1>
                 <p className="text-lg text-gray-600">
                   Continue sua busca pelo estágio ideal e impulsione sua carreira
@@ -190,7 +190,7 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
                 </p>
               </div>
 
-              {/* Role selector */}
+              {/* Seletor de papel */}
               <div className="flex items-center justify-center gap-3 mb-6">
                 <button onClick={() => setRole('candidate')} className={`px-4 py-2 rounded-full font-semibold transition ${role === 'candidate' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>
                   Candidato

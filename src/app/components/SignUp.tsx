@@ -172,7 +172,7 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
 
             {/* Lado Direito - Formulário */}
             <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
-              {/* Role selector */}
+              {/* Seletor de papel */}
               <div className="flex items-center justify-center gap-3 mb-6">
                 <button
                   onClick={() => { setRole('candidate'); setStep(1); }}
@@ -188,7 +188,7 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
                 </button>
               </div>
 
-              {/* Progress Steps */}
+              {/* Etapas de progresso */}
               <div className="flex items-center justify-center gap-2 mb-8">
                 {[1, 2].map((num) => (
                   <div key={num} className="flex items-center">
@@ -447,7 +447,7 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
                 </form>
                 )
               ) : (
-                // Company signup form (single step)
+                // Formulário de cadastro da empresa (etapa única)
                 <form className="space-y-4" onSubmit={handleRegister}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Nome da empresa</label>

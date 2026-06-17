@@ -133,7 +133,7 @@ export function ApplicationsList({ user, selectedJob, onSelectJob }: Application
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Job Selector */}
+      {/* Seletor de vaga */}
       <div className="mb-8">
         <label htmlFor="job-select" className="block text-sm font-semibold text-gray-700 mb-3">
           Selecionar Vaga
