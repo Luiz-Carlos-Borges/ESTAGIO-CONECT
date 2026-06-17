@@ -1,5 +1,5 @@
 // CompanyProfile.tsx: aba de perfil e configurações da empresa no painel
-// Permite editar dados da empresa, ver estatísticas consolidadas e gerenciar configurações de conta.
+// Permite editar dados reais da empresa (persistidos no banco) e ver estatísticas consolidadas.
 
 import { useState, useEffect } from 'react';
 import {
@@ -15,13 +15,10 @@ import {
   Edit3,
   Save,
   X,
-  Camera,
-  MapPin,
-  Award,
-  BarChart2,
   AlertCircle,
   Loader,
   Link2,
+  BarChart2,
 } from 'lucide-react';
 import type { User } from '../types';
 import { apiCall } from '../../config/api';
@@ -36,9 +33,6 @@ interface CompanyStats {
   activeJobs: number;
   totalApplicants: number;
   totalViews: number;
-  acceptedCount: number;
-  rejectedCount: number;
-  pendingCount: number;
 }
 
 interface EditableCompany {
@@ -46,25 +40,7 @@ interface EditableCompany {
   phone: string;
   about: string;
   website: string;
-  sector: string;
-  size: string;
-  city: string;
 }
-
-const SECTOR_OPTIONS = [
-  'Tecnologia',
-  'Educação',
-  'Saúde',
-  'Finanças',
-  'Serviços',
-  'Logística',
-  'Varejo',
-  'Indústria',
-  'Comunicação',
-  'Outro',
-];
-
-const SIZE_OPTIONS = ['1-10', '11-50', '51-200', '201-500', '500+'];
 
 export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
   const [editing, setEditing] = useState(false);
@@ -79,10 +55,17 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
     phone: user.company?.phone ?? '',
     about: user.company?.about ?? '',
     website: user.company?.website ?? '',
-    sector: '',
-    size: '',
-    city: '',
   });
+
+  // Mantém o formulário sincronizado se o usuário (vindo de fora) mudar.
+  useEffect(() => {
+    setForm({
+      name: user.company?.name ?? '',
+      phone: user.company?.phone ?? '',
+      about: user.company?.about ?? '',
+      website: user.company?.website ?? '',
+    });
+  }, [user.company?.name, user.company?.phone, user.company?.about, user.company?.website]);
 
   useEffect(() => {
     loadStats();
@@ -107,9 +90,6 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
         activeJobs: active,
         totalApplicants,
         totalViews,
-        acceptedCount: 0,
-        rejectedCount: 0,
-        pendingCount: totalApplicants,
       });
     }
     setLoadingStats(false);
@@ -121,9 +101,6 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
       phone: user.company?.phone ?? '',
       about: user.company?.about ?? '',
       website: user.company?.website ?? '',
-      sector: '',
-      size: '',
-      city: '',
     });
     setSaveError(null);
     setSaveSuccess(false);
@@ -160,18 +137,23 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
 
     setSaving(false);
 
-    if (error) {
-      // Endpoint pode não existir ainda; mostrar sucesso local de qualquer forma
-      // para demonstração do componente.
-      setSaveError('Não foi possível salvar no servidor. Verifique a conexão.');
-    } else {
-      setSaveSuccess(true);
-      setEditing(false);
-      if (onUserUpdate && data?.user) {
-        onUserUpdate(data.user);
-      }
-      setTimeout(() => setSaveSuccess(false), 3000);
+    if (error || !data) {
+      setSaveError(typeof error === 'string' ? error : 'Não foi possível salvar no servidor. Tente novamente.');
+      return;
     }
+
+    // O backend gera um novo token com os dados atualizados — precisa substituir o antigo,
+    // senão o próximo recarregamento da página volta a mostrar os dados velhos.
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+    }
+
+    setSaveSuccess(true);
+    setEditing(false);
+    if (onUserUpdate && data.user) {
+      onUserUpdate(data.user);
+    }
+    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   const field = (key: keyof EditableCompany, value: string) =>
@@ -214,27 +196,16 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
 
-      {/* ── Banner + avatar ── */}
+      {/* ── Banner ── */}
       <div className="relative rounded-2xl overflow-hidden">
-        {/* Capa gradiente */}
         <div className="h-36 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600" />
 
-        {/* Avatar flutuante */}
         <div className="absolute left-8 top-16 flex items-center gap-4">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-xl flex items-center justify-center">
-              <Building2 className="w-12 h-12 text-blue-600" />
-            </div>
-            <button
-              className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition"
-              title="Trocar logotipo"
-            >
-              <Camera className="w-4 h-4 text-gray-500" />
-            </button>
+          <div className="w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-xl flex items-center justify-center">
+            <Building2 className="w-12 h-12 text-blue-600" />
           </div>
         </div>
 
-        {/* Botão de editar alinhado à direita da capa */}
         <div className="absolute right-6 bottom-4">
           {!editing ? (
             <button
@@ -269,7 +240,6 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
           )}
         </div>
 
-        {/* Espaço para o avatar */}
         <div className="bg-white border border-gray-100 rounded-b-2xl px-8 pt-16 pb-6">
           <div className="flex items-end justify-between flex-wrap gap-4">
             <div>
@@ -341,11 +311,12 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Nome */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="company-name" className="block text-sm font-semibold text-gray-700 mb-1">
               Nome da empresa <span className="text-red-500">*</span>
             </label>
             {editing ? (
               <input
+                id="company-name"
                 type="text"
                 value={form.name}
                 onChange={(e) => field('name', e.target.value)}
@@ -359,13 +330,14 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
 
           {/* Telefone */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="company-phone" className="block text-sm font-semibold text-gray-700 mb-1">
               <span className="flex items-center gap-1">
                 <Phone className="w-3.5 h-3.5" /> Telefone
               </span>
             </label>
             {editing ? (
               <input
+                id="company-phone"
                 type="tel"
                 value={form.phone}
                 onChange={(e) => field('phone', e.target.value)}
@@ -379,13 +351,14 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
 
           {/* Website */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="company-website" className="block text-sm font-semibold text-gray-700 mb-1">
               <span className="flex items-center gap-1">
                 <Globe className="w-3.5 h-3.5" /> Site
               </span>
             </label>
             {editing ? (
               <input
+                id="company-website"
                 type="url"
                 value={form.website}
                 onChange={(e) => field('website', e.target.value)}
@@ -407,81 +380,14 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
             )}
           </div>
 
-          {/* Setor */}
-          <div>
-            <label htmlFor="sector" className="block text-sm font-semibold text-gray-700 mb-1">
-              <span className="flex items-center gap-1">
-                <Award className="w-3.5 h-3.5" /> Setor
-              </span>
-            </label>
-            {editing ? (
-              <select
-                id="sector"
-                value={form.sector}
-                onChange={(e) => field('sector', e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Selecione o setor</option>
-                {SECTOR_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-gray-900 py-1">{form.sector || '—'}</p>
-            )}
-          </div>
-
-          {/* Tamanho */}
-          <div>
-            <label htmlFor="size" className="block text-sm font-semibold text-gray-700 mb-1">
-              <span className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" /> Número de funcionários
-              </span>
-            </label>
-            {editing ? (
-              <select
-                id="size"
-                value={form.size}
-                onChange={(e) => field('size', e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Selecione o tamanho</option>
-                {SIZE_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s} funcionários</option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-gray-900 py-1">{form.size ? `${form.size} funcionários` : '—'}</p>
-            )}
-          </div>
-
-          {/* Cidade */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" /> Cidade
-              </span>
-            </label>
-            {editing ? (
-              <input
-                type="text"
-                value={form.city}
-                onChange={(e) => field('city', e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="São Paulo, SP"
-              />
-            ) : (
-              <p className="text-gray-900 py-1">{form.city || '—'}</p>
-            )}
-          </div>
-
           {/* Sobre */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="company-about" className="block text-sm font-semibold text-gray-700 mb-1">
               Sobre a empresa
             </label>
             {editing ? (
               <textarea
+                id="company-about"
                 value={form.about}
                 onChange={(e) => field('about', e.target.value)}
                 rows={5}
@@ -543,13 +449,6 @@ export function CompanyProfile({ user, onUserUpdate }: CompanyProfileProps) {
               <Building2 className="w-3.5 h-3.5" /> Empresa
             </span>
           </div>
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-gray-100">
-          <p className="text-sm text-gray-500 mb-3">Segurança</p>
-          <button className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
-            Alterar senha
-          </button>
         </div>
       </section>
 

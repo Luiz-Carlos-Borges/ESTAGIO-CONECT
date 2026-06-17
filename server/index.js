@@ -185,6 +185,60 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   return res.json({ user: req.user });
 });
 
+// Rota para a empresa atualizar seus próprios dados de perfil (nome, telefone, sobre, site).
+app.put('/api/auth/profile', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'company' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Apenas empresas podem editar o perfil da empresa.' });
+    }
+
+    const { company } = req.body;
+    if (!company || typeof company !== 'object') {
+      return res.status(400).json({ error: 'Dados da empresa não enviados.' });
+    }
+
+    const { name, phone, about, website } = company;
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ error: 'O nome da empresa é obrigatório.' });
+    }
+
+    const userRow = await db('users').where({ id: req.user.id }).first();
+    if (!userRow) {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+
+    await db('users').where({ id: req.user.id }).update({
+      companyName: name,
+      companyPhone: phone || null,
+      companyAbout: about || null,
+      website: website || null,
+    });
+
+    const updatedRow = await db('users').where({ id: req.user.id }).first();
+
+    const payload = {
+      id: updatedRow.id,
+      name: updatedRow.name,
+      email: updatedRow.email,
+      role: updatedRow.role,
+      company: {
+        name: updatedRow.companyName,
+        phone: updatedRow.companyPhone,
+        about: updatedRow.companyAbout,
+        website: updatedRow.website,
+      },
+    };
+
+    // Gera um novo token com os dados atualizados, já que o token antigo tem os dados antigos.
+    const token = createToken(payload);
+
+    return res.json({ token, user: payload });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao atualizar perfil da empresa.' });
+  }
+});
+
 // Rota para listar vagas com pesquisa opcional.
 app.get('/api/jobs', async (req, res) => {
   try {
@@ -253,7 +307,7 @@ app.get('/api/jobs/:jobId/applications', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Vaga não encontrada.' });
     }
     
-    if (job.ownerId !== req.user.id) {
+    if (job.ownerId !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Você não tem permissão para ver as candidaturas desta vaga.' });
     }
 
@@ -285,7 +339,7 @@ app.patch('/api/applications/:appId', authMiddleware, async (req, res) => {
 
     // Verificar se a empresa é dona da vaga
     const job = await db('jobs').where({ id: application.jobId }).first();
-    if (!job || job.ownerId !== req.user.id) {
+    if (!job || (job.ownerId !== req.user.id && req.user.role !== 'admin')) {
       return res.status(403).json({ error: 'Você não tem permissão para atualizar esta candidatura.' });
     }
 
@@ -364,7 +418,110 @@ app.post('/api/jobs', authMiddleware, async (req, res) => {
   }
 });
 
-// Rota para envio de candidatura, incluindo upload de currículo.
+// Rota para a empresa atualizar uma vaga (ex: editar campos, ativar/desativar mudando o prazo).
+app.patch('/api/jobs/:id', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'company' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Apenas empresas podem editar vagas.' });
+    }
+
+    const { id } = req.params;
+    const job = await db('jobs').where({ id }).first();
+
+    if (!job) {
+      return res.status(404).json({ error: 'Vaga não encontrada.' });
+    }
+
+    if (job.ownerId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Você não tem permissão para editar esta vaga.' });
+    }
+
+    const {
+      title,
+      location,
+      type,
+      salary,
+      tags,
+      description,
+      responsibilities,
+      requirements,
+      benefits,
+      deadline,
+      toggleActive,
+    } = req.body;
+
+    const updatePayload = {};
+
+    if (title !== undefined) updatePayload.title = title;
+    if (location !== undefined) updatePayload.location = location;
+    if (type !== undefined) updatePayload.type = type;
+    if (salary !== undefined) updatePayload.salary = salary;
+    if (tags !== undefined) updatePayload.tags = JSON.stringify(tags);
+    if (description !== undefined) updatePayload.description = description;
+    if (responsibilities !== undefined) updatePayload.responsibilities = JSON.stringify(responsibilities);
+    if (requirements !== undefined) updatePayload.requirements = JSON.stringify(requirements);
+    if (benefits !== undefined) updatePayload.benefits = JSON.stringify(benefits);
+
+    // Atualiza estatísticas (deadline) preservando applicants e views existentes.
+    if (deadline !== undefined || toggleActive !== undefined) {
+      const currentStats = JSON.parse(job.stats || '{}');
+      let newDeadline = deadline !== undefined ? deadline : currentStats.deadline;
+
+      // toggleActive: se true, ativa (prazo futuro); se false, expira a vaga (prazo passado).
+      if (toggleActive === true) {
+        const future = new Date();
+        future.setDate(future.getDate() + 30);
+        newDeadline = future.toISOString();
+      } else if (toggleActive === false) {
+        const past = new Date();
+        past.setDate(past.getDate() - 1);
+        newDeadline = past.toISOString();
+      }
+
+      updatePayload.stats = JSON.stringify({ ...currentStats, deadline: newDeadline });
+    }
+
+    if (Object.keys(updatePayload).length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo para atualizar.' });
+    }
+
+    await db('jobs').where({ id }).update(updatePayload);
+    const updatedRow = await db('jobs').where({ id }).first();
+    return res.json(formatJob(updatedRow));
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao atualizar vaga.' });
+  }
+});
+
+// Rota para a empresa excluir uma vaga publicada.
+app.delete('/api/jobs/:id', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'company' && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Apenas empresas podem excluir vagas.' });
+    }
+
+    const { id } = req.params;
+    const job = await db('jobs').where({ id }).first();
+
+    if (!job) {
+      return res.status(404).json({ error: 'Vaga não encontrada.' });
+    }
+
+    if (job.ownerId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Você não tem permissão para excluir esta vaga.' });
+    }
+
+    // Remove primeiro as candidaturas vinculadas, depois a vaga.
+    await db('applications').where({ jobId: id }).del();
+    await db('jobs').where({ id }).del();
+
+    return res.status(204).send();
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao excluir vaga.' });
+  }
+});
 app.post('/api/applications', upload.single('resume'), async (req, res) => {
   try {
     const { jobId, name, email, phone, city, portfolio, linkedin, github, coverLetter } = req.body;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, Edit, Trash2, ToggleRight, Calendar, MapPin, Users, Loader, Briefcase } from 'lucide-react';
+import { Eye, Edit, Trash2, ToggleRight, ToggleLeft, MapPin, Users, Loader, Briefcase, X, Save } from 'lucide-react';
 import type { Job, User } from '../types';
 import { apiCall } from '../../config/api';
 
@@ -12,6 +12,10 @@ export function PublishedJobs({ user, onSelectJob }: PublishedJobsProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'expired'>('all');
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', location: '', type: '', salary: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     loadJobs();
@@ -41,6 +45,88 @@ export function PublishedJobs({ user, onSelectJob }: PublishedJobsProps) {
     }
     return true;
   });
+
+  // Exclui a vaga após confirmação do usuário.
+  const handleDelete = async (job: Job) => {
+    const confirmed = window.confirm(
+      `Tem certeza que deseja excluir a vaga "${job.title}"? Essa ação também removerá todas as candidaturas associadas e não pode ser desfeita.`,
+    );
+    if (!confirmed) return;
+
+    setActionLoadingId(job.id);
+    const token = localStorage.getItem('token');
+    const { error } = await apiCall(`/api/jobs/${job.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (error) {
+      window.alert('Não foi possível excluir a vaga. Tente novamente.');
+    } else {
+      setJobs((prev) => prev.filter((j) => j.id !== job.id));
+    }
+    setActionLoadingId(null);
+  };
+
+  // Ativa ou desativa a vaga (expira ou reabre o prazo).
+  const handleToggleActive = async (job: Job) => {
+    const isExpired = new Date(job.stats.deadline) <= new Date();
+    setActionLoadingId(job.id);
+
+    const token = localStorage.getItem('token');
+    const { data, error } = await apiCall(`/api/jobs/${job.id}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ toggleActive: isExpired }),
+    });
+
+    if (!error && data) {
+      setJobs((prev) => prev.map((j) => (j.id === job.id ? (data as Job) : j)));
+    } else {
+      window.alert('Não foi possível atualizar o status da vaga.');
+    }
+    setActionLoadingId(null);
+  };
+
+  const startEdit = (job: Job) => {
+    setEditingJob(job);
+    setEditForm({
+      title: job.title,
+      location: job.location,
+      type: job.type,
+      salary: job.salary,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingJob(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editingJob) return;
+    if (!editForm.title.trim() || !editForm.location.trim()) {
+      window.alert('Título e localização são obrigatórios.');
+      return;
+    }
+
+    setSavingEdit(true);
+    const token = localStorage.getItem('token');
+    const { data, error } = await apiCall(`/api/jobs/${editingJob.id}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(editForm),
+    });
+
+    setSavingEdit(false);
+
+    if (error) {
+      window.alert('Não foi possível salvar as alterações. Tente novamente.');
+      return;
+    }
+
+    setJobs((prev) => prev.map((j) => (j.id === editingJob.id ? (data as Job) : j)));
+    setEditingJob(null);
+  };
 
   if (loading) {
     return (
@@ -93,6 +179,7 @@ export function PublishedJobs({ user, onSelectJob }: PublishedJobsProps) {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1">
           {filteredJobs.map((job) => {
             const isExpired = new Date(job.stats.deadline) <= new Date();
+            const isActing = actionLoadingId === job.id;
             return (
               <div
                 key={job.id}
@@ -148,21 +235,125 @@ export function PublishedJobs({ user, onSelectJob }: PublishedJobsProps) {
                     Ver Candidatos
                   </button>
                   <button
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-3 text-gray-700 font-semibold hover:bg-gray-300 transition"
+                    onClick={() => startEdit(job)}
+                    disabled={isActing}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-3 text-gray-700 font-semibold hover:bg-gray-300 transition disabled:opacity-50"
                     title="Editar vaga"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-3 text-gray-700 font-semibold hover:bg-gray-300 transition"
-                    title="Ativar ou desativar vaga"
+                    onClick={() => handleToggleActive(job)}
+                    disabled={isActing}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-200 px-4 py-3 text-gray-700 font-semibold hover:bg-gray-300 transition disabled:opacity-50"
+                    title={isExpired ? 'Reativar vaga' : 'Desativar vaga'}
                   >
-                    <ToggleRight className="w-4 h-4" />
+                    {isActing ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : isExpired ? (
+                      <ToggleLeft className="w-4 h-4" />
+                    ) : (
+                      <ToggleRight className="w-4 h-4" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(job)}
+                    disabled={isActing}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-100 px-4 py-3 text-red-700 font-semibold hover:bg-red-200 transition disabled:opacity-50"
+                    title="Excluir vaga"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Modal de edição rápida */}
+      {editingJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900">Editar vaga</h3>
+              <button onClick={cancelEdit} className="p-1 rounded-lg hover:bg-gray-100 transition">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="edit-title" className="block text-sm font-semibold text-gray-700 mb-1">
+                  Título da vaga
+                </label>
+                <input
+                  id="edit-title"
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="edit-location" className="block text-sm font-semibold text-gray-700 mb-1">
+                  Localização
+                </label>
+                <input
+                  id="edit-location"
+                  type="text"
+                  value={editForm.location}
+                  onChange={(e) => setEditForm((f) => ({ ...f, location: e.target.value }))}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="edit-type" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Tipo
+                  </label>
+                  <input
+                    id="edit-type"
+                    type="text"
+                    value={editForm.type}
+                    onChange={(e) => setEditForm((f) => ({ ...f, type: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit-salary" className="block text-sm font-semibold text-gray-700 mb-1">
+                    Bolsa/Salário
+                  </label>
+                  <input
+                    id="edit-salary"
+                    type="text"
+                    value={editForm.salary}
+                    onChange={(e) => setEditForm((f) => ({ ...f, salary: e.target.value }))}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={cancelEdit}
+                className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveEdit}
+                disabled={savingEdit}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:shadow-md transition disabled:opacity-60"
+              >
+                {savingEdit ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Salvar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

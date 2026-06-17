@@ -120,7 +120,7 @@ export default function App() {
           }
           setAuth({ token, user: data.user });
           if (currentPage === 'welcome' || currentPage === 'signup' || currentPage === 'signin') {
-            setCurrentPage(data.user.role === 'company' ? 'company-dashboard' : 'home');
+            setCurrentPage(data.user.role === 'company' || data.user.role === 'admin' ? 'company-dashboard' : 'home');
           }
         })
         .catch(() => {
@@ -262,8 +262,8 @@ export default function App() {
   const handleAuthSuccess = (token: string, user: AuthState['user']) => {
     localStorage.setItem('token', token);
     setAuth({ token, user });
-    // Redirecionar empresa para o dashboard, candidato para home
-    if (user.role === 'company') {
+    // Redirecionar empresa/admin para o dashboard, candidato para home
+    if (user.role === 'company' || user.role === 'admin') {
       setCurrentPage('company-dashboard');
     } else {
       setCurrentPage('home');
@@ -344,7 +344,7 @@ export default function App() {
   }
 
   if (currentPage === 'company-dashboard') {
-    return auth?.user.role === 'company' && auth.user ? (
+    return (auth?.user.role === 'company' || auth?.user.role === 'admin') && auth.user ? (
       <CompanyDashboard
         user={auth.user}
         onBackToCompany={() => setCurrentPage('company-dashboard')}
@@ -363,7 +363,7 @@ export default function App() {
       <CreateJob
         onBackToCompany={() => {
           // Se veio do dashboard, volta para o dashboard
-          if (auth?.user.role === 'company') {
+          if (auth?.user.role === 'company' || auth?.user.role === 'admin') {
             setCurrentPage('company-dashboard');
           } else {
             setCurrentPage('company');

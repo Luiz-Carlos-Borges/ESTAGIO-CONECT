@@ -8,9 +8,10 @@ interface ApplicationsListProps {
   user: User;
   selectedJob: Job | null;
   onSelectJob: (job: Job) => void;
+  onGoToScreening?: (job: Job) => void;
 }
 
-export function ApplicationsList({ user, selectedJob, onSelectJob }: ApplicationsListProps) {
+export function ApplicationsList({ user, selectedJob, onSelectJob, onGoToScreening }: ApplicationsListProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
@@ -198,7 +199,9 @@ export function ApplicationsList({ user, selectedJob, onSelectJob }: Application
 
               <button
                 onClick={() => {
-                  if (selectedJob) onSelectJob(selectedJob);
+                  if (selectedJob) {
+                    (onGoToScreening || onSelectJob)(selectedJob);
+                  }
                 }}
                 className="px-6 py-3 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition self-end"
               >

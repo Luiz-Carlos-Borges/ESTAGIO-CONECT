@@ -41,6 +41,10 @@ export function CompanyDashboard({
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [currentUser, setCurrentUser] = useState<User>(user);
 
+  const handleSelectJob = (job: Job) => {
+    setSelectedJob(job);
+  };
+
   const handleSelectJobForApplications = (job: Job) => {
     setSelectedJob(job);
     setActiveTab('applications');
@@ -140,10 +144,15 @@ export function CompanyDashboard({
           <PublishedJobs user={currentUser} onSelectJob={handleSelectJobForApplications} />
         )}
         {activeTab === 'applications' && (
-          <ApplicationsList user={currentUser} selectedJob={selectedJob} onSelectJob={handleSelectJobForScreening} />
+          <ApplicationsList
+            user={currentUser}
+            selectedJob={selectedJob}
+            onSelectJob={handleSelectJob}
+            onGoToScreening={handleSelectJobForScreening}
+          />
         )}
         {activeTab === 'screening' && (
-          <ScreeningPanel user={currentUser} selectedJob={selectedJob} onSelectJob={handleSelectJobForApplications} />
+          <ScreeningPanel user={currentUser} selectedJob={selectedJob} onSelectJob={handleSelectJob} />
         )}
         {activeTab === 'profile' && (
           <CompanyProfile user={currentUser} onUserUpdate={setCurrentUser} />
