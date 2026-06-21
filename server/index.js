@@ -568,7 +568,7 @@ app.use((error, req, res, next) => {
 // Inicia o servidor
 app.listen(PORT, () => {
   console.log('\n╔════════════════════════════════════════════╗');
-  console.log('║  🚀 EstágioConnect Backend Iniciado       ║');
+  console.log('║  🚀 EstágioConnect Backend Iniciado        ║');
   console.log(`║  URL: http://localhost:${PORT}`.padEnd(45) + '║');
   console.log('║  Banco de dados: SQLite                    ║');
   console.log('║  CORS: Habilitado                          ║');
