@@ -57,7 +57,7 @@ function authMiddleware(req, res, next) {
 }
 
 // Rota de registro de usuário.
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', upload.single('studentDoc'), async (req, res) => {
   try {
     const {
       name,
@@ -99,6 +99,7 @@ app.post('/api/auth/register', async (req, res) => {
       candidateCity: role === 'candidate' ? candidateCity : null,
       candidateCourse: role === 'candidate' ? candidateCourse : null,
       candidatePeriod: role === 'candidate' ? candidatePeriod : null,
+      studentDocPath: (role === 'candidate' && req.file) ? req.file.filename : null,
     });
 
     const user = {
@@ -522,7 +523,18 @@ app.delete('/api/jobs/:id', authMiddleware, async (req, res) => {
     return res.status(500).json({ error: 'Erro ao excluir vaga.' });
   }
 });
-app.post('/api/applications', upload.single('resume'), async (req, res) => {
+// Middleware de autenticação opcional — não rejeita sem token, apenas popula req.user se válido
+function optionalAuth(req, res, next) {
+  const authorization = req.headers.authorization;
+  if (authorization?.startsWith('Bearer ')) {
+    try {
+      req.user = jwt.verify(authorization.replace('Bearer ', ''), JWT_SECRET);
+    } catch {}
+  }
+  return next();
+}
+
+app.post('/api/applications', optionalAuth, upload.single('resume'), async (req, res) => {
   try {
     const { jobId, name, email, phone, city, portfolio, linkedin, github, coverLetter } = req.body;
     if (!jobId || !name || !email || !phone) {
@@ -554,8 +566,8 @@ app.post('/api/applications', upload.single('resume'), async (req, res) => {
 
     return res.status(201).json({ id, message: 'Candidatura enviada com sucesso.' });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Erro ao enviar candidatura.' });
+    console.error('[POST /api/applications]', error?.message || error);
+    return res.status(500).json({ error: 'Erro ao enviar candidatura: ' + (error?.message || 'erro desconhecido') });
   }
 });
 

@@ -22,19 +22,8 @@ type Page = 'welcome' | 'company' | 'company-dashboard' | 'createjob' | 'home' |
 
 export default function App() {
   const getInitialPage = (): Page => {
-    const validPages = new Set<Page>(['welcome', 'company', 'company-dashboard', 'createjob', 'home', 'signup', 'signin', 'jobdetails', 'application']);
-    const hasToken = typeof window !== 'undefined' && Boolean(localStorage.getItem('token'));
-    if (!hasToken) {
-      return 'welcome';
-    }
-
-    const historyState = typeof window !== 'undefined' ? (window.history.state as { page?: Page } | null) : null;
-    if (historyState?.page && validPages.has(historyState.page)) {
-      return historyState.page;
-    }
-
-    const savedPage = typeof window !== 'undefined' ? localStorage.getItem('ESTAGIO_CONNECT_currentPage') : null;
-    return savedPage && validPages.has(savedPage as Page) ? (savedPage as Page) : 'welcome';
+    // Sempre inicia no WelcomeScreen, independente de token ou estado salvo
+    return 'welcome';
   };
 
   const getInitialAuthView = (): 'candidate' | 'company' => {
@@ -125,7 +114,9 @@ export default function App() {
         })
         .catch(() => {
           localStorage.removeItem('token');
+          localStorage.removeItem('ESTAGIO_CONNECT_currentPage');
           setAuth(null);
+          setCurrentPage('welcome');
         });
     }
   }, []);

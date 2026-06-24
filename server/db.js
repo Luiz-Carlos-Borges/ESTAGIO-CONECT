@@ -45,6 +45,7 @@ export async function initDatabase() {
       table.string('candidateCity').nullable();
       table.string('candidateCourse').nullable();
       table.string('candidatePeriod').nullable();
+      table.string('studentDocPath').nullable(); // comprovante de matrícula
       
       // Campos de EMPRESA
       table.string('companyName').nullable();
@@ -72,6 +73,14 @@ export async function initDatabase() {
       // Adiciona coluna de telefone de empresa se não existir
       await db.schema.table('users', (table) => {
         table.string('companyPhone').nullable();
+      });
+    }
+
+    const hasStudentDocPath = await db.schema.hasColumn('users', 'studentDocPath');
+    if (!hasStudentDocPath) {
+      // Adiciona coluna para o comprovante de matrícula do candidato
+      await db.schema.table('users', (table) => {
+        table.string('studentDocPath').nullable();
       });
     }
   }
@@ -124,6 +133,13 @@ export async function initDatabase() {
     if (!hasStatusColumn) {
       await db.schema.table('applications', (table) => {
         table.string('status').defaultTo('novo');
+      });
+    }
+    // Adiciona coluna userId se não existir (migration para bancos antigos)
+    const hasUserIdColumn = await db.schema.hasColumn('applications', 'userId');
+    if (!hasUserIdColumn) {
+      await db.schema.table('applications', (table) => {
+        table.integer('userId').nullable();
       });
     }
   }

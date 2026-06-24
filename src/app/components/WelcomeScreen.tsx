@@ -1,5 +1,6 @@
-import { useState, MouseEvent } from 'react';
+import { useState } from 'react';
 import { Search, Users, Briefcase, ArrowRight, CheckCircle, Building2, GraduationCap, TrendingUp, Award } from 'lucide-react';
+import { PolicyModal, PolicyType } from './PolicyModal';
 
 // WelcomeScreen.tsx: página de boas-vindas que permite escolher entre estudante ou empresa
 interface WelcomeScreenProps {
@@ -10,15 +11,10 @@ interface WelcomeScreenProps {
 }
 
 export function WelcomeScreen({ onStartAsStudent, onCreateStudentAccount, onStartAsCompany, onCreateCompanyAccount }: WelcomeScreenProps) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalContent, setModalContent] = useState('');
-
-  const handleFooterLink = (event: MouseEvent<HTMLAnchorElement>, title: string) => {
+  const [policyModal, setPolicyModal] = useState<PolicyType | null>(null);
+  const openPolicy = (type: PolicyType) => (event: React.MouseEvent) => {
     event.preventDefault();
-    setModalTitle(title);
-    setModalContent('Conteúdo de ' + title + ' em construção. Volte em breve!');
-    setModalOpen(true);
+    setPolicyModal(type);
   };
 
   return (
@@ -248,40 +244,17 @@ export function WelcomeScreen({ onStartAsStudent, onCreateStudentAccount, onStar
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600">
             <p>© 2026 EstágioConnect. Todos os direitos reservados.</p>
             <div className="flex gap-6">
-              <a href="#" onClick={(event) => handleFooterLink(event, 'Sobre')} className="hover:text-blue-600 transition">Sobre</a>
-              <a href="#" onClick={(event) => handleFooterLink(event, 'Ajuda')} className="hover:text-blue-600 transition">Ajuda</a>
-              <a href="#" onClick={(event) => handleFooterLink(event, 'Termos')} className="hover:text-blue-600 transition">Termos</a>
-              <a href="#" onClick={(event) => handleFooterLink(event, 'Privacidade')} className="hover:text-blue-600 transition">Privacidade</a>
-              <a href="#" onClick={(event) => handleFooterLink(event, 'Contato')} className="hover:text-blue-600 transition">Contato</a>
+              <a href="#" onClick={openPolicy('sobre')} className="hover:text-blue-600 transition">Sobre</a>
+              <a href="#" onClick={openPolicy('ajuda')} className="hover:text-blue-600 transition">Ajuda</a>
+              <a href="#" onClick={openPolicy('termos')} className="hover:text-blue-600 transition">Termos</a>
+              <a href="#" onClick={openPolicy('privacidade')} className="hover:text-blue-600 transition">Privacidade</a>
+              <a href="#" onClick={openPolicy('contato')} className="hover:text-blue-600 transition">Contato</a>
             </div>
           </div>
         </div>
       </footer>
 
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">{modalTitle}</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="text-gray-500 hover:text-gray-900"
-              >
-                Fechar
-              </button>
-            </div>
-            <textarea
-              value={modalContent}
-              onChange={(event) => setModalContent(event.target.value)}
-              placeholder="Escreva aqui o texto que deve aparecer nesta seção..."
-              className="w-full h-40 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
-        </div>
-      )}
+      {policyModal && <PolicyModal type={policyModal} onClose={() => setPolicyModal(null)} />}
     </div>
   );
 }

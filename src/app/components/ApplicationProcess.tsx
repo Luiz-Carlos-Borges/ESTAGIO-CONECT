@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { Job } from '../types';
+import { PolicyModal, PolicyType } from './PolicyModal';
 
 interface ApplicationProcessProps {
   job?: Job | null;
@@ -15,6 +16,7 @@ interface ApplicationProcessProps {
 // ApplicationProcess.tsx: página de candidatura e visualização das etapas do processo seletivo
 export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProcessProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [policyModal, setPolicyModal] = useState<PolicyType | null>(null);
   const [formData, setFormData] = useState({
     resume: null,
     coverLetter: '',
@@ -104,13 +106,79 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
     }
   ];
 
-  // Submete o formulário de candidatura e confirma o envio ao usuário
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  // Submete o formulário de candidatura para a API do backend
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert('Candidatura enviada com sucesso! Você receberá atualizações por email.');
+
+    if (!formData.resume) {
+      alert('Anexe seu currículo antes de enviar.');
+      return;
+    }
+    if (!formData.name || !formData.email || !formData.phone) {
+      alert('Preencha nome, email e telefone.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const payload = new FormData();
+      payload.append('jobId', String(currentJob.id));
+      payload.append('name', formData.name);
+      payload.append('email', formData.email);
+      payload.append('phone', formData.phone);
+      payload.append('city', formData.city);
+      payload.append('portfolio', formData.portfolio);
+      payload.append('linkedin', formData.linkedin);
+      payload.append('github', formData.github);
+      payload.append('coverLetter', formData.coverLetter);
+      payload.append('resume', formData.resume as unknown as Blob);
+
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers,
+        body: payload,
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json.error || 'Erro ao enviar candidatura.');
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      alert('Erro inesperado. Tente novamente.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
+    <>
+    {submitted ? (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-10 h-10 text-green-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Candidatura enviada!</h2>
+          <p className="text-gray-600 mb-2">Sua candidatura para <strong>{currentJob.title}</strong> foi registrada com sucesso.</p>
+          <p className="text-gray-500 text-sm mb-8">A empresa receberá seu currículo e entrará em contato pelo email informado.</p>
+          <button
+            onClick={onBackToJob}
+            className="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold"
+          >
+            Voltar para as vagas
+          </button>
+        </div>
+      </div>
+    ) : (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="border-b bg-white sticky top-0 z-50 shadow-sm">
@@ -188,6 +256,8 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                         </label>
                         <input
                           type="text"
+                          value={formData.name}
+                          onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
                           placeholder="João da Silva"
                           className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                           required
@@ -201,6 +271,8 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
                             type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
                             placeholder="seu@email.com"
                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                             required
@@ -215,6 +287,8 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
                             type="tel"
+                            value={formData.phone}
+                            onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
                             placeholder="(11) 99999-9999"
                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                             required
@@ -229,9 +303,10 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
                             type="text"
+                            value={formData.city}
+                            onChange={(e) => setFormData((p) => ({ ...p, city: e.target.value }))}
                             placeholder="São Paulo, SP"
                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
-                            required
                           />
                         </div>
                       </div>
@@ -249,15 +324,40 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Currículo (PDF ou DOC) *
                         </label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-600 transition cursor-pointer">
+                        <div
+                          className={`border-2 border-dashed rounded-lg p-6 transition cursor-pointer ${formData.resume ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-blue-600'}`}
+                          onClick={() => document.getElementById('resume-input')?.click()}
+                        >
                           <div className="text-center">
-                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                            <p className="text-sm text-gray-600 mb-1">
-                              Clique para fazer upload ou arraste o arquivo
-                            </p>
-                            <p className="text-xs text-gray-500">PDF ou DOC até 5MB</p>
+                            {formData.resume ? (
+                              <>
+                                <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                                <p className="text-sm font-medium text-green-700 mb-1">
+                                  {(formData.resume as File).name}
+                                </p>
+                                <p className="text-xs text-green-500">Clique para trocar o arquivo</p>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                <p className="text-sm text-gray-600 mb-1">
+                                  Clique para fazer upload ou arraste o arquivo
+                                </p>
+                                <p className="text-xs text-gray-500">PDF ou DOC até 5MB</p>
+                              </>
+                            )}
                           </div>
-                          <input type="file" className="hidden" accept=".pdf,.doc,.docx" aria-label="Enviar currículo" />
+                          <input
+                            id="resume-input"
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.doc,.docx"
+                            aria-label="Enviar currículo"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] ?? null;
+                              setFormData((prev) => ({ ...prev, resume: file as any }));
+                            }}
+                          />
                         </div>
                       </div>
 
@@ -267,6 +367,8 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                         </label>
                         <textarea
                           rows={4}
+                          value={formData.coverLetter}
+                          onChange={(e) => setFormData((p) => ({ ...p, coverLetter: e.target.value }))}
                           placeholder="Conte um pouco sobre você e por que se interessa por esta vaga..."
                           className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition resize-none"
                         />
@@ -289,6 +391,8 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                           <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
                             type="url"
+                            value={formData.linkedin}
+                            onChange={(e) => setFormData((p) => ({ ...p, linkedin: e.target.value }))}
                             placeholder="linkedin.com/in/seuperfil"
                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                           />
@@ -302,6 +406,8 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                           <Github className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <input
                             type="url"
+                            value={formData.github}
+                            onChange={(e) => setFormData((p) => ({ ...p, github: e.target.value }))}
                             placeholder="github.com/seuperfil"
                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                           />
@@ -313,6 +419,8 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                         </label>
                         <input
                           type="url"
+                          value={formData.portfolio}
+                          onChange={(e) => setFormData((p) => ({ ...p, portfolio: e.target.value }))}
                           placeholder="https://seuportfolio.com"
                           className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
                         />
@@ -330,7 +438,7 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                     />
                     <label htmlFor="terms" className="text-sm text-gray-700">
                       Declaro que as informações fornecidas são verdadeiras e autorizo o uso dos meus dados para fins de processo seletivo, de acordo com a{' '}
-                      <a href="#" className="text-blue-600 hover:underline">LGPD</a>.
+                      <a href="#" onClick={(e) => { e.preventDefault(); setPolicyModal('lgpd'); }} className="text-blue-600 hover:underline">LGPD</a>.
                     </label>
                   </div>
 
@@ -338,16 +446,18 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
                   <div className="flex gap-4 pt-4">
                     <button
                       type="button"
+                      onClick={onBackToJob}
                       className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-semibold"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2"
+                      disabled={submitting}
+                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       <Send className="w-5 h-5" />
-                      Enviar Candidatura
+                      {submitting ? 'Enviando...' : 'Enviar Candidatura'}
                     </button>
                   </div>
                 </form>
@@ -490,5 +600,8 @@ export function ApplicationProcess({ job, jobs, onBackToJob }: ApplicationProces
         </div>
       </div>
     </div>
+    )}
+    {policyModal && <PolicyModal type={policyModal} onClose={() => setPolicyModal(null)} />}
+    </>
   );
 }

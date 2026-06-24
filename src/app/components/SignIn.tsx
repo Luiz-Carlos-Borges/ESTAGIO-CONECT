@@ -2,6 +2,7 @@ import { Search, Mail, Lock, ArrowRight, Briefcase, TrendingUp } from 'lucide-re
 import { useState } from 'react';
 import { User } from '../types';
 import { apiCall } from '../../config/api';
+import { PolicyModal, PolicyType } from './PolicyModal';
 
 // SignIn.tsx: página de login com layout responsivo e opções de acesso social
 interface SignInProps {
@@ -16,6 +17,7 @@ export function SignIn({ initialRole = 'candidate', onBackToHome, onSignUp, onAu
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [policyModal, setPolicyModal] = useState<PolicyType | null>(null);
 
 const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
   event.preventDefault();
@@ -280,13 +282,14 @@ const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-600">
             <p>© 2026 EstágioConnect. Todos os direitos reservados.</p>
             <div className="flex gap-6">
-              <a href="#" className="hover:text-blue-600 transition">Termos de Uso</a>
-              <a href="#" className="hover:text-blue-600 transition">Política de Privacidade</a>
-              <a href="#" className="hover:text-blue-600 transition">Ajuda</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); setPolicyModal('termos'); }} className="hover:text-blue-600 transition">Termos de Uso</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); setPolicyModal('privacidade'); }} className="hover:text-blue-600 transition">Política de Privacidade</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); setPolicyModal('ajuda'); }} className="hover:text-blue-600 transition">Ajuda</a>
             </div>
           </div>
         </div>
       </footer>
+      {policyModal && <PolicyModal type={policyModal} onClose={() => setPolicyModal(null)} />}
     </div>
   );
 }

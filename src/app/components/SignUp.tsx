@@ -1,6 +1,7 @@
-import { Search, Mail, Lock, User, GraduationCap, Calendar, Phone, MapPin, ArrowRight, CheckCircle, Building } from 'lucide-react';
+import { Search, Mail, Lock, User, GraduationCap, Calendar, Phone, MapPin, ArrowRight, CheckCircle, Building, FileText, Upload } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import { apiCall } from '../../config/api';
+import { PolicyModal, PolicyType } from './PolicyModal';
 
 // SignUp.tsx: fluxo de cadastro em duas etapas para criação de conta e informações acadêmicas
 interface SignUpProps {
@@ -25,6 +26,9 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
   const [period, setPeriod] = useState('');
   const [graduationYear, setGraduationYear] = useState('');
   const [city, setCity] = useState('');
+  const [studentDoc, setStudentDoc] = useState<File | null>(null);
+  const [policyModal, setPolicyModal] = useState<PolicyType | null>(null);
+  const openPolicy = (type: PolicyType) => (e: React.MouseEvent) => { e.preventDefault(); setPolicyModal(type); };
   const [companyName, setCompanyName] = useState('');
   const [companyPhone, setCompanyPhone] = useState('');
   const [companyAbout, setCompanyAbout] = useState('');
@@ -46,34 +50,46 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
     setLoading(true);
 
     try {
-      const { data, error } = await apiCall('/api/auth/register', {
+      // Usa FormData para suportar envio de arquivo (comprovante de matrícula)
+      const formData = new FormData();
+      formData.append('name', role === 'company' ? companyName : name);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('role', role);
+
+      if (role === 'company') {
+        formData.append('companyName', companyName);
+        formData.append('companyPhone', companyPhone);
+        formData.append('companyAbout', companyAbout);
+      } else {
+        formData.append('candidatePhone', phone);
+        formData.append('candidateCity', city);
+        formData.append('candidateCourse', course);
+        formData.append('candidatePeriod', period);
+        if (studentDoc) {
+          formData.append('studentDoc', studentDoc);
+        }
+      }
+
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
-        body: JSON.stringify({
-          name: role === 'company' ? companyName : name,
-          email,
-          password,
-          role,
-          ...(role === 'company' && {
-            companyName,
-            companyPhone,
-            companyAbout,
-          }),
-          ...(role === 'candidate' && {
-            candidatePhone: phone,
-            candidateCity: city,
-            candidateCourse: course,
-            candidatePeriod: period,
-          }),
-        }),
+        headers,
+        body: formData,
       });
 
-      if (error) {
-        window.alert(error);
+      const data = await response.json();
+
+      if (!response.ok) {
+        window.alert(data.error || 'Erro ao cadastrar.');
         return;
       }
 
       onAuthSuccess?.(data.token, data.user);
-    } catch (error) {
+    } catch {
       window.alert('Erro inesperado ao cadastrar.');
     } finally {
       setLoading(false);
@@ -416,6 +432,56 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
                     </div>
                   </div>
 
+                  {/* Comprovante de matrícula */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Comprovante de matrícula
+                      <span className="ml-1 text-xs text-gray-400 font-normal">(PDF ou imagem, máx. 5MB)</span>
+                    </label>
+                    <div
+                      className={`relative border-2 border-dashed rounded-lg p-4 transition cursor-pointer ${
+                        studentDoc
+                          ? 'border-green-400 bg-green-50'
+                          : 'border-gray-200 bg-gray-50 hover:border-blue-400 hover:bg-blue-50'
+                      }`}
+                      onClick={() => document.getElementById('studentDocInput')?.click()}
+                    >
+                      <input
+                        id="studentDocInput"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => setStudentDoc(e.target.files?.[0] ?? null)}
+                      />
+                      <div className="flex items-center gap-3">
+                        {studentDoc ? (
+                          <>
+                            <FileText className="w-8 h-8 text-green-500 flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-green-700">{studentDoc.name}</p>
+                              <p className="text-xs text-green-500">
+                                {(studentDoc.size / 1024).toFixed(0)} KB · clique para trocar
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-8 h-8 text-gray-400 flex-shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-600">Clique para enviar o comprovante</p>
+                              <p className="text-xs text-gray-400">Atestado de matrícula ou carteirinha estudantil</p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {!studentDoc && (
+                      <p className="mt-1 text-xs text-amber-600 flex items-center gap-1">
+                        <span>⚠</span> Recomendado para verificação do seu perfil
+                      </p>
+                    )}
+                  </div>
+
                   <div className="flex items-start gap-3 pt-2">
                     <input
                       type="checkbox"
@@ -424,7 +490,7 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
                       required
                     />
                     <label htmlFor="terms" className="text-sm text-gray-600">
-                      Concordo com os <a href="#" className="text-blue-600 hover:underline">Termos de Uso</a> e a <a href="#" className="text-blue-600 hover:underline">Política de Privacidade</a>
+                      Concordo com os <a href="#" onClick={openPolicy('termos')} className="text-blue-600 hover:underline">Termos de Uso</a> e a <a href="#" onClick={openPolicy('privacidade')} className="text-blue-600 hover:underline">Política de Privacidade</a>
                     </label>
                   </div>
 
@@ -441,7 +507,7 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
                       disabled={loading}
                       className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50"
                     >
-                      Criar conta
+                      {loading ? 'Criando...' : 'Criar conta'}
                     </button>
                   </div>
                 </form>
@@ -505,7 +571,6 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
                     />
                   </div>
 
-        
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
                     <div className="relative">
@@ -538,22 +603,25 @@ export function SignUp({ initialRole = 'candidate', onBackToHome, onSignIn, onAu
 
                   <div className="flex items-start gap-3 pt-2">
                     <input type="checkbox" id="terms_company" className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-600" required />
-                    <label htmlFor="terms_company" className="text-sm text-gray-600">Concordo com os <a href="#" className="text-blue-600 hover:underline">Termos de Uso</a> e a <a href="#" className="text-blue-600 hover:underline">Política de Privacidade</a></label>
+                    <label htmlFor="terms_company" className="text-sm text-gray-600">Concordo com os <a href="#" onClick={openPolicy('termos')} className="text-blue-600 hover:underline">Termos de Uso</a> e a <a href="#" onClick={openPolicy('privacidade')} className="text-blue-600 hover:underline">Política de Privacidade</a></label>
                   </div>
 
-                  <button type="submit" disabled={loading} className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50">Criar conta da empresa</button>
+                  <button type="submit" disabled={loading} className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50">
+                    {loading ? 'Criando...' : 'Criar conta da empresa'}
+                  </button>
                 </form>
               )}
 
               <div className="mt-6 text-center text-sm text-gray-600">
                 Ao criar uma conta, você aceita nossos{' '}
-                <a href="#" className="text-blue-600 hover:underline">Termos</a> e{' '}
-                <a href="#" className="text-blue-600 hover:underline">Política de Privacidade</a>
+                <a href="#" onClick={openPolicy('termos')} className="text-blue-600 hover:underline">Termos</a> e{' '}
+                <a href="#" onClick={openPolicy('privacidade')} className="text-blue-600 hover:underline">Política de Privacidade</a>
               </div>
             </div>
           </div>
         </div>
       </div>
+      {policyModal && <PolicyModal type={policyModal} onClose={() => setPolicyModal(null)} />}
     </div>
   );
 }
