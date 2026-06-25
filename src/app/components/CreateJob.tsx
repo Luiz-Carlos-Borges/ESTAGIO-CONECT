@@ -549,11 +549,7 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                 <Eye className="h-4 w-4 text-gray-600" />
                 Visualizar Prévia
               </button>
-              <button type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-gray-900 px-5 py-4 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition">
-                <Save className="h-4 w-4" />
-                Salvar Rascunho
-              </button>
+
               <button type="submit" disabled={loading}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-purple-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-purple-900/20 hover:bg-purple-700 transition disabled:opacity-50">
                 <CheckCircle className="h-4 w-4" />

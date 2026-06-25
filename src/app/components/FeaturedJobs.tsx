@@ -49,9 +49,6 @@ export function FeaturedJobs({ jobs, onJobClick }: FeaturedJobsProps) {
                     <p className="text-gray-600">{job.company}</p>
                   </div>
                 </div>
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition" aria-label="Salvar vaga">
-                  <Bookmark className="w-5 h-5 text-gray-400" />
-                </button>
               </div>
               
               <div className="space-y-2 mb-4">

@@ -48,13 +48,8 @@ export function JobDetails({ job: jobProp, jobs, onBackToHome, onApplyNow }: Job
               <span className="text-xl font-bold text-gray-900">EstágioConnect</span>
             </div>
             <div className="flex items-center gap-4">
-              <button className="hidden md:flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 transition">
-                <Users className="w-5 h-5" />
-                <span>Entrar</span>
-              </button>
-              <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                Cadastrar
-              </button>
+
+
             </div>
           </div>
         </div>
