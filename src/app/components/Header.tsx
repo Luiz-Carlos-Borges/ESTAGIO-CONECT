@@ -6,6 +6,8 @@ interface HeaderProps {
   onSignIn?: () => void;
   userName?: string;
   onSignOut?: () => void;
+  onMyApplications?: () => void;
+  userRole?: string;
 }
 
 export function Header({
@@ -13,6 +15,8 @@ export function Header({
   onSignIn,
   userName,
   onSignOut,
+  onMyApplications,
+  userRole,
 }: HeaderProps) {
   const [showTips, setShowTips] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -56,6 +60,15 @@ export function Header({
                 <span className="hidden md:inline text-gray-700">
                   Olá, {userName}
                 </span>
+
+                {userRole === 'candidate' && (
+                  <button
+                    onClick={onMyApplications}
+                    className="hidden md:flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 transition text-sm font-medium"
+                  >
+                    Minhas Candidaturas
+                  </button>
+                )}
 
                 <button
                   onClick={onSignOut}

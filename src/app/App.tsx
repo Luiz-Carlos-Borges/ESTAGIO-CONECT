@@ -15,10 +15,11 @@ import { SignUp } from './components/SignUp';
 import { SignIn } from './components/SignIn';
 import { JobDetails } from './components/JobDetails';
 import { ApplicationProcess } from './components/ApplicationProcess';
+import { MyCandidatures } from './components/MyCandidatures';
 import { Job, AuthState } from './types';
 import { apiCall } from '../config/api';
 
-type Page = 'welcome' | 'company' | 'company-dashboard' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application';
+type Page = 'welcome' | 'company' | 'company-dashboard' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application' | 'my-applications';
 
 export default function App() {
   const getInitialPage = (): Page => {
@@ -45,7 +46,7 @@ export default function App() {
   };
 
   // Estado de navegação das páginas internas do aplicativo.
-  const [currentPage, setCurrentPage] = useState<'welcome' | 'company' | 'company-dashboard' | 'createjob' | 'home' | 'signup' | 'signin' | 'jobdetails' | 'application'>(getInitialPage);
+  const [currentPage, setCurrentPage] = useState<Page>(getInitialPage);
   const [authView, setAuthView] = useState<'candidate' | 'company'>(getInitialAuthView);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(getInitialSelectedJobId);
   const pendingPageRef = useRef<Page | null>(null);
@@ -387,6 +388,10 @@ export default function App() {
     );
   }
 
+  if (currentPage === 'my-applications') {
+    return <MyCandidatures onBack={() => setCurrentPage('home')} />;
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Header
@@ -394,6 +399,8 @@ export default function App() {
         onSignIn={() => setCurrentPage('signin')}
         userName={auth?.user.name}
         onSignOut={handleSignOut}
+        userRole={auth?.user.role}
+        onMyApplications={() => setCurrentPage('my-applications')}
       />
       <HeroSection onSearch={handleSearch} />
       <FeaturedJobs jobs={jobs} onJobClick={handleJobClick} />

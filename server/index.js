@@ -17,16 +17,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: uploadDir,
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + '-' + Math.round(Math.random() * 1e9) + ext);
+const upload = multer({
+  dest: uploadDir,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // limite de 5MB por upload
   },
 });
-
-const upload = multer({
-  storage,});
 
 const app = express();
 app.use(cors());
@@ -565,8 +561,7 @@ app.post('/api/applications', optionalAuth, upload.single('resume'), async (req,
       linkedin: linkedin || null,
       github: github || null,
       coverLetter: coverLetter || null,
-    resumePath: req.file.filename,
-    originalName: req.file.originalname,
+      resumePath: req.file.filename,
     });
 
     return res.status(201).json({ id, message: 'Candidatura enviada com sucesso.' });
@@ -580,6 +575,25 @@ app.post('/api/applications', optionalAuth, upload.single('resume'), async (req,
 app.use((error, req, res, next) => {
   console.error(error);
   return res.status(500).json({ error: 'Erro interno do servidor.' });
+});
+
+// Rota para candidatos verem suas próprias candidaturas
+app.get('/api/applications/mine', authMiddleware, async (req, res) => {
+  try {
+    const apps = await db('applications')
+      .where({ userId: req.user.id })
+      .orderBy('createdAt', 'desc');
+
+    const withJobs = await Promise.all(apps.map(async (app) => {
+      const job = await db('jobs').where({ id: app.jobId }).first();
+      return { ...app, job: job ? formatJob(job) : null };
+    }));
+
+    return res.json(withJobs);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Erro ao buscar candidaturas.' });
+  }
 });
 
 // Inicia o servidor
