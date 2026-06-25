@@ -107,7 +107,9 @@ app.post('/api/auth/login', async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatch) return res.status(401).json({ error: 'Credenciais inválidas.' });
     const payload = {
-      id: user.id, name: user.name, email: user.email, role: user.role,
+      id: user.id, name: user.name, email: user.email,
+      role: user.role,
+      companyName: user.companyName,
       ...(user.role === 'company' && { company: { name: user.companyName, phone: user.companyPhone, about: user.companyAbout, website: user.website } }),
       ...(user.role === 'candidate' && { candidate: { phone: user.candidatePhone, city: user.candidateCity, course: user.candidateCourse, period: user.candidatePeriod } }),
     };

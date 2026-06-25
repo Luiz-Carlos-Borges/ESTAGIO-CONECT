@@ -124,7 +124,8 @@ export async function initDatabase() {
       table.string('github').nullable();
       table.text('coverLetter').nullable();
       table.string('resumePath').notNullable();
-      table.string('status').defaultTo('novo'); // 'novo', 'em-analise', 'aceito', 'rejeitado'
+      table.string('originalName').nullable();
+      table.string('status').defaultTo('novo');
       table.timestamp('createdAt').defaultTo(db.fn.now());
     });
   } else {
@@ -135,11 +136,18 @@ export async function initDatabase() {
         table.string('status').defaultTo('novo');
       });
     }
-    // Adiciona coluna userId se não existir (migration para bancos antigos)
+    // Adiciona coluna userId se não existir
     const hasUserIdColumn = await db.schema.hasColumn('applications', 'userId');
     if (!hasUserIdColumn) {
       await db.schema.table('applications', (table) => {
         table.integer('userId').nullable();
+      });
+    }
+    // Adiciona coluna originalName se não existir
+    const hasOriginalNameColumn = await db.schema.hasColumn('applications', 'originalName');
+    if (!hasOriginalNameColumn) {
+      await db.schema.table('applications', (table) => {
+        table.string('originalName').nullable();
       });
     }
   }
@@ -155,6 +163,30 @@ export async function initDatabase() {
   if (user7 && user7.role !== 'admin') {
     await db('users').where({ id: 7 }).update({ role: 'admin' });
     console.log('✓ Usuário id:7 atualizado para admin');
+  }
+
+  // Garante que o usuário admin padrão sempre existe
+  try {
+    const adminEmail = 'admin@estagioconnect.com';
+    const existingAdmin = await db('users').where({ email: adminEmail }).first();
+    if (!existingAdmin) {
+      const bcrypt = await import('bcryptjs');
+      const passwordHash = await bcrypt.default.hash('admin123', 10);
+      await db('users').insert({
+        name: 'Administrador',
+        email: adminEmail,
+        passwordHash,
+        role: 'admin',
+      });
+      console.log('✓ Admin criado: admin@estagioconnect.com / admin123');
+    } else if (existingAdmin.role !== 'admin') {
+      await db('users').where({ email: adminEmail }).update({ role: 'admin' });
+      console.log('✓ Usuário admin@estagioconnect.com atualizado para role admin');
+    } else {
+      console.log('✓ Admin já existe: admin@estagioconnect.com');
+    }
+  } catch (err) {
+    console.error('Erro ao criar admin:', err.message);
   }
 }
 
