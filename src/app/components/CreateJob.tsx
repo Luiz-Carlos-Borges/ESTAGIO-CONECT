@@ -32,6 +32,7 @@ const areas = ['Tecnologia', 'Marketing', 'Design', 'Administração', 'Finança
 const jobTypes = ['Presencial', 'Remoto', 'Híbrido'];
 const sectors = ['Tecnologia', 'Educação', 'Saúde', 'Finanças', 'Serviços', 'Logística'];
 const companySizes = ['1-10', '11-50', '51-200', '201-500', '500+'];
+const weeklyHoursOptions = ['20h', '25h', '30h', '40h', 'A combinar'];
 
 export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps) {
   const [title, setTitle] = useState('');
@@ -42,6 +43,7 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
   const [vacancies, setVacancies] = useState(1);
   const [salaryMin, setSalaryMin] = useState('');
   const [salaryMax, setSalaryMax] = useState('');
+  const [weeklyHours, setWeeklyHours] = useState(weeklyHoursOptions[0]);
   const [deadline, setDeadline] = useState('');
   const [description, setDescription] = useState('');
   const [responsibilities, setResponsibilities] = useState(['']);
@@ -110,11 +112,11 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
         title,
         location: `${city}, ${state}`,
         type: jobType,
-        salary: `${salaryMin || 'A combinar'} - ${salaryMax || 'A combinar'}`,
+        salary: `R$ ${salaryMin || 'A combinar'} - R$ ${salaryMax || 'A combinar'}`,
         posted: deadline ? `Prazo até ${deadline}` : 'Há pouco tempo',
         logo: '💼',
         tags,
-        description,
+        description: `${description}\n\n⏰ Carga horária: ${weeklyHours} semanais`,
         responsibilities,
         requirements,
         benefits,
@@ -202,6 +204,7 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
           </div>
 
           <form onSubmit={handleSubmit} className="mt-10 space-y-10">
+            {/* Informações Básicas */}
             <section className="space-y-6 rounded-3xl border border-gray-200 bg-gray-50 p-6">
               <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
                 <Briefcase className="h-5 w-5 text-purple-600" />
@@ -266,9 +269,9 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                 </label>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-4">
+              <div className="grid gap-6 md:grid-cols-5">
                 <label className="space-y-2">
-                  <span className="text-sm font-semibold text-gray-700">Número de vagas *</span>
+                  <span className="text-sm font-semibold text-gray-700">Nº de vagas *</span>
                   <input
                     type="number"
                     min={1}
@@ -284,7 +287,7 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                     <input
                       value={salaryMin}
                       onChange={(event) => setSalaryMin(event.target.value)}
-                      placeholder="R$ 1.500"
+                      placeholder="1.500"
                       className="w-full rounded-3xl border border-gray-200 bg-white px-10 py-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                     />
                   </div>
@@ -296,9 +299,24 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                     <input
                       value={salaryMax}
                       onChange={(event) => setSalaryMax(event.target.value)}
-                      placeholder="R$ 3.500"
+                      placeholder="3.500"
                       className="w-full rounded-3xl border border-gray-200 bg-white px-10 py-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                     />
+                  </div>
+                </label>
+                <label className="space-y-2">
+                  <span className="text-sm font-semibold text-gray-700">Horas semanais *</span>
+                  <div className="relative">
+                    <Clock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <select
+                      value={weeklyHours}
+                      onChange={(event) => setWeeklyHours(event.target.value)}
+                      className="w-full rounded-3xl border border-gray-200 bg-white pl-10 pr-4 py-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
+                    >
+                      {weeklyHoursOptions.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
                   </div>
                 </label>
                 <label className="space-y-2">
@@ -316,6 +334,7 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
               </div>
             </section>
 
+            {/* Descrição */}
             <section className="space-y-6 rounded-3xl border border-gray-200 bg-gray-50 p-6">
               <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
                 <FileText className="h-5 w-5 text-purple-600" />
@@ -333,13 +352,11 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
               </label>
             </section>
 
+            {/* Responsabilidades */}
             <section className="space-y-6 rounded-3xl border border-gray-200 bg-gray-50 p-6">
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                  <CheckCircle className="h-5 w-5 text-purple-600" />
-                  <span>Responsabilidades</span>
-                </div>
-                <div className="md:col-span-2 text-sm text-gray-600">Adicione as principais atividades do estágio.</div>
+              <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                <CheckCircle className="h-5 w-5 text-purple-600" />
+                Responsabilidades
               </div>
               <div className="space-y-4">
                 {responsibilities.map((item, index) => (
@@ -351,20 +368,12 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                       className="w-full rounded-3xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                     />
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => addItem(responsibilities, setResponsibilities)}
-                        aria-label="Adicionar responsabilidade"
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600 text-white hover:bg-purple-700 transition"
-                      >
+                      <button type="button" onClick={() => addItem(responsibilities, setResponsibilities)}
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600 text-white hover:bg-purple-700 transition">
                         <Plus className="h-5 w-5" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeItem(responsibilities, setResponsibilities, index)}
-                        aria-label="Remover responsabilidade"
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
-                      >
+                      <button type="button" onClick={() => removeItem(responsibilities, setResponsibilities, index)}
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
                         <X className="h-5 w-5" />
                       </button>
                     </div>
@@ -373,13 +382,11 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
               </div>
             </section>
 
+            {/* Requisitos */}
             <section className="space-y-6 rounded-3xl border border-gray-200 bg-gray-50 p-6">
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                  <Users className="h-5 w-5 text-purple-600" />
-                  <span>Requisitos</span>
-                </div>
-                <div className="md:col-span-2 text-sm text-gray-600">Liste as competências e experiência desejada.</div>
+              <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                <Users className="h-5 w-5 text-purple-600" />
+                Requisitos
               </div>
               <div className="space-y-4">
                 {requirements.map((item, index) => (
@@ -391,20 +398,12 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                       className="w-full rounded-3xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                     />
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => addItem(requirements, setRequirements)}
-                        aria-label="Adicionar requisito"
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600 text-white hover:bg-purple-700 transition"
-                      >
+                      <button type="button" onClick={() => addItem(requirements, setRequirements)}
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600 text-white hover:bg-purple-700 transition">
                         <Plus className="h-5 w-5" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeItem(requirements, setRequirements, index)}
-                        aria-label="Remover requisito"
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
-                      >
+                      <button type="button" onClick={() => removeItem(requirements, setRequirements, index)}
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
                         <X className="h-5 w-5" />
                       </button>
                     </div>
@@ -413,13 +412,11 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
               </div>
             </section>
 
+            {/* Benefícios */}
             <section className="space-y-6 rounded-3xl border border-gray-200 bg-gray-50 p-6">
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                  <Award className="h-5 w-5 text-purple-600" />
-                  <span>Benefícios</span>
-                </div>
-                <div className="md:col-span-2 text-sm text-gray-600">Mostre o que a empresa oferece ao estagiário.</div>
+              <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                <Award className="h-5 w-5 text-purple-600" />
+                Benefícios
               </div>
               <div className="space-y-4">
                 {benefits.map((item, index) => (
@@ -431,20 +428,12 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                       className="w-full rounded-3xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100"
                     />
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => addItem(benefits, setBenefits)}
-                        aria-label="Adicionar benefício"
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600 text-white hover:bg-purple-700 transition"
-                      >
+                      <button type="button" onClick={() => addItem(benefits, setBenefits)}
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600 text-white hover:bg-purple-700 transition">
                         <Plus className="h-5 w-5" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeItem(benefits, setBenefits, index)}
-                        aria-label="Remover benefício"
-                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
-                      >
+                      <button type="button" onClick={() => removeItem(benefits, setBenefits, index)}
+                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
                         <X className="h-5 w-5" />
                       </button>
                     </div>
@@ -453,13 +442,11 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
               </div>
             </section>
 
+            {/* Tags */}
             <section className="space-y-6 rounded-3xl border border-gray-200 bg-gray-50 p-6">
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                  <MapPin className="h-5 w-5 text-purple-600" />
-                  <span>Habilidades / Tags</span>
-                </div>
-                <div className="md:col-span-2 text-sm text-gray-600">Pressione Enter ou adicione novas tags manualmente.</div>
+              <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                <MapPin className="h-5 w-5 text-purple-600" />
+                Habilidades / Tags
               </div>
               <div className="grid gap-4 md:grid-cols-[1fr_auto]">
                 <div className="flex items-center gap-3 rounded-3xl border border-gray-200 bg-white px-4 py-3">
@@ -472,11 +459,8 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                     className="w-full border-none bg-transparent outline-none text-gray-900 placeholder:text-gray-400"
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={addTag}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-purple-600 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-700 transition"
-                >
+                <button type="button" onClick={addTag}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-purple-600 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-700 transition">
                   <Plus className="h-4 w-4" />
                   Adicionar tag
                 </button>
@@ -485,12 +469,8 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
                 {tags.map((tag) => (
                   <span key={tag} className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-2 text-sm text-blue-700">
                     {tag}
-                    <button
-                      type="button"
-                      aria-label={`Remover tag ${tag}`}
-                      onClick={() => removeTag(tag)}
-                      className="rounded-full p-1 text-blue-600 hover:bg-blue-200"
-                    >
+                    <button type="button" onClick={() => removeTag(tag)}
+                      className="rounded-full p-1 text-blue-600 hover:bg-blue-200">
                       <X className="h-3 w-3" />
                     </button>
                   </span>
@@ -498,13 +478,11 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
               </div>
             </section>
 
+            {/* Informações da Empresa */}
             <section className="space-y-6 rounded-3xl border border-gray-200 bg-gray-50 p-6">
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
-                  <Building2 className="h-5 w-5 text-purple-600" />
-                  <span>Informações da Empresa</span>
-                </div>
-                <div className="md:col-span-2 text-sm text-gray-600">Conte um pouco sobre sua marca e o ambiente de trabalho.</div>
+              <div className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                <Building2 className="h-5 w-5 text-purple-600" />
+                Informações da Empresa
               </div>
               <div className="grid gap-6 md:grid-cols-2">
                 <label className="space-y-2">
@@ -566,26 +544,20 @@ export function CreateJob({ onBackToCompany, token, onCreated }: CreateJobProps)
             </section>
 
             <div className="grid gap-4 lg:grid-cols-3">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-4 text-sm font-semibold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-100 transition"
-              >
+              <button type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-4 text-sm font-semibold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-100 transition">
                 <Eye className="h-4 w-4 text-gray-600" />
                 Visualizar Prévia
               </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-gray-900 px-5 py-4 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition"
-              >
+              <button type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-gray-900 px-5 py-4 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition">
                 <Save className="h-4 w-4" />
                 Salvar Rascunho
               </button>
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-purple-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-purple-900/20 hover:bg-purple-700 transition"
-              >
+              <button type="submit" disabled={loading}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-purple-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-purple-900/20 hover:bg-purple-700 transition disabled:opacity-50">
                 <CheckCircle className="h-4 w-4" />
-                Publicar Vaga
+                {loading ? 'Publicando...' : 'Publicar Vaga'}
               </button>
             </div>
           </form>
