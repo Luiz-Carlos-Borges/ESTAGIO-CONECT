@@ -20,7 +20,7 @@ if (!fs.existsSync(uploadDir)) {
 const upload = multer({
   dest: uploadDir,
   limits: {
-    fileSize: 5 * 1024 * 1024, // limite de 5MB por upload
+fileSize: 20 * 1024 * 1024, // limite de 20MB
   },
 });
 
