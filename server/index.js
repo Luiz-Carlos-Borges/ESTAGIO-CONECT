@@ -17,12 +17,16 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const upload = multer({
-  dest: uploadDir,
-  limits: {
-fileSize: 20 * 1024 * 1024, // limite de 20MB
+const storage = multer.diskStorage({
+  destination: uploadDir,
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, Date.now() + '-' + Math.round(Math.random() * 1e9) + ext);
   },
 });
+
+const upload = multer({
+  storage,});
 
 const app = express();
 app.use(cors());
@@ -561,7 +565,8 @@ app.post('/api/applications', optionalAuth, upload.single('resume'), async (req,
       linkedin: linkedin || null,
       github: github || null,
       coverLetter: coverLetter || null,
-      resumePath: req.file.filename,
+    resumePath: req.file.filename,
+    originalName: req.file.originalname,
     });
 
     return res.status(201).json({ id, message: 'Candidatura enviada com sucesso.' });

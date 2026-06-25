@@ -275,6 +275,7 @@ export function ApplicationsList({ user, selectedJob, onSelectJob, onGoToScreeni
                         <div className="flex gap-2">
                           <a
                             href={`/uploads/${app.resumePath}`}
+                            download={app.originalName || app.resumePath}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-sm px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
